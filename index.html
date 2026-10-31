@@ -329,6 +329,14 @@
         gap: 8px;
         white-space: nowrap;
       }
+      .participantes {
+        font-size: 12.5px;
+        color: var(--gris);
+        white-space: normal;
+        max-width: 180px;
+        line-height: 1.25;
+        margin-top: 1px;
+      }
       .avatar {
         width: 34px;
         height: 34px;
@@ -1296,6 +1304,17 @@
       });
       marcarOrden();
 
+      // Participantes distintos del responsable, para mostrarlos debajo de su nombre
+      function normalizar(s) {
+        return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+      }
+      function otrosParticipantes(t) {
+        const resp = normalizar(t.responsable);
+        const otros = String(t.participantes || '').split(',').map(x => x.trim())
+          .filter(x => x && normalizar(x) !== resp);
+        return otros.length ? `<div class="participantes" title="Participantes">con ${otros.map(esc).join(', ')}</div>` : '';
+      }
+
       const PLEGADAS = new Set();
       function hijasDe(id) {
         return DATOS
@@ -1362,7 +1381,7 @@
       <td class="t-nombre">${nombre}${esHija && sub
             ? `<div class="t-sub">${sub}</div>`
             : ''}</td>
-      <td><div class="persona">${avatar(t.responsable)}${esc(t.responsable)}</div></td>
+      <td><div class="persona">${avatar(t.responsable)}<div>${esc(t.responsable)}${otrosParticipantes(t)}</div></div></td>
       <td><span class="estado e-${esc(String(t.estado).replace(/\s/g, '-'))}">${esc(t.estado)}</span></td>
       <td class="fecha" data-l="Inicio">${fmt(t.inicio)}</td>
       <td class="fecha" data-l="Fin">${fmt(t.fin)}</td>
