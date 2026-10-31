@@ -802,6 +802,11 @@
         <div class="campo c4">
           <label>Tarea *</label><input name="tarea" required></div>
         <div class="campo c4">
+          <label>Creado por</label>
+          <select name="creadoPor" id="selCreador"></select>
+          <span class="ayuda" id="ayudaCreador"></span>
+        </div>
+        <div class="campo c4">
           <label>Tarea principal</label>
           <select name="padre" id="selPadre" onchange="cambioPadre()"></select>
           <span class="ayuda" id="ayudaPadre"></span></div>
@@ -1427,10 +1432,24 @@
           ? 'Tiene subtareas, así que es una tarea de nivel 1. Su % se calcula con el de sus subtareas.'
           : '';
 
+        // "Creado por": miembros con correo. Solo se elige al crear la tarea; después no se puede cambiar.
+        const conCorreo = DATOS.miembros.filter(m => m.email);
+        let opciones = conCorreo.map(m => `<option value="${esc(m.email.toLowerCase())}">${esc(m.nombre)} — ${esc(m.email)}</option>`);
+        if (id && t.creadoPor && !conCorreo.some(m => m.email.toLowerCase() === String(t.creadoPor).toLowerCase()))
+          opciones.push(`<option value="${esc(t.creadoPor)}">${esc(t.creadoPor)}</option>`); // ya no está en Miembros
+        $('selCreador').innerHTML = `<option value="">${id ? '— (no consta)' : '— Elige quién crea la tarea —'}</option>` + opciones.join('');
+        $('selCreador').disabled = !!id;
+        $('selCreador').required = !id;
+        $('ayudaCreador').textContent = id
+          ? 'No se puede cambiar una vez creada la tarea.'
+          : (conCorreo.length ? '' : 'Añade el correo de cada miembro en la columna Email de la pestaña Miembros.');
+
         frm.reset();
-        for (const el of frm.elements) 
-          if (el.name) 
+        for (const el of frm.elements)
+          if (el.name)
             el.value = t[el.name] ?? '';
+        if (id) $('selCreador').value = String(t.creadoPor || '').toLowerCase();
+        else $('selCreador').value = leerCreador(); // el último elegido en este dispositivo
       ABIERTA = t;
         mostrarProgreso();
         pintarSugerencias();
@@ -1447,6 +1466,10 @@
       }
       function cerrar() {
         $('dlg').close();
+      }
+
+      function leerCreador() {
+        try { return localStorage.getItem('aespi_creador') || ''; } catch (e) { return ''; }
       }
 
       let ABIERTA = null; // tarea abierta en el formulario
@@ -1478,8 +1501,10 @@
       function guardar(ev) {
         ev.preventDefault();
         const t = Object.fromEntries(new FormData(frm));
-        if ($('selPadre').disabled) 
+        if ($('selPadre').disabled)
           t.padre = ''; // un select desactivado no se envía
+        if (!t.id && t.creadoPor)
+          try { localStorage.setItem('aespi_creador', t.creadoPor); } catch (e) {}
         cerrar();
         $('cargando').style.display = 'grid';
         llamar('guardar', {
