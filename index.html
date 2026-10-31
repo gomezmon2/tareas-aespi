@@ -13,20 +13,94 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Tareas AESPI">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <script>
+      // Tema: 'auto' (según el dispositivo), 'claro' u 'oscuro'. Se recuerda en este dispositivo.
+      (function () {
+        let pref = 'auto';
+        try { pref = localStorage.getItem('aespi_tema') || 'auto'; } catch (e) {}
+        const oscuro = pref === 'oscuro' || (pref === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.tema = oscuro ? 'oscuro' : 'claro';
+      })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+      /* Colores. Tema claro (por defecto) */
       :root {
-        --verde: #c6e6d0;
+        color-scheme: light;
+        --verde: #c6e6d0;          /* cabecera, completado, avatar */
         --verde-osc: #2e7d4f;
-        --azul: #1f4e9c;
+        --azul: #1f4e9c;           /* títulos y textos destacados */
+        --primario: #1f4e9c;       /* fondo de botones principales */
+        --sobre-primario: #fff;
         --barra: #9e7f94;
+        --pista: #eee;
         --texto: #1c2430;
         --gris: #6b7280;
         --borde: #dfe3e8;
         --fondo: #f6f8f7;
-        --blanco: #fff;
+        --blanco: #fff;            /* tarjetas, tabla, formularios */
         --rojo: #c0392b;
-        --ambar: #b7791f;
+        --rojo-suave: #f5e1df;
+        --rojo-borde: #f0c4be;
+        --azul-suave: #e3ecfa;
+        --gris-suave: #eef0f2;
+        --fila-hover: #f0f6f2;
+        --fila-principal: #f7faf8;
+        --texto-hija: #34507f;
+        --estrella: #e0a800;
+        --boton-cab: rgba(255, 255, 255, 0.6);
+        --velo: rgba(255, 255, 255, 0.6);
+        --sombra: rgba(0, 0, 0, 0.25);
+        --telon: rgba(20, 30, 40, 0.45);
+        --aviso-fondo: #1c2430;
+        --aviso-texto: #fff;
+        --e0b: #e3ecfa; --e0f: #1f4e9c;
+        --e1b: #fde8d7; --e1f: #9a4a0f;
+        --e2b: #e6f4ea; --e2f: #276a3c;
+        --e3b: #f3e5f5; --e3f: #7b3d8a;
+        --e4b: #fff4c2; --e4f: #7a5a00;
+        --e5b: #e0f4f7; --e5f: #11657a;
+        --e6b: #fbe4e6; --e6f: #a1283a;
+        --e7b: #ececec; --e7f: #444;
+      }
+      /* Tema oscuro (lo activa el script del <head> según la preferencia) */
+      :root[data-tema="oscuro"] {
+        color-scheme: dark;
+        --verde: #1d3a2b;
+        --verde-osc: #7fd19c;
+        --azul: #8fb4f0;
+        --primario: #3b6fc9;
+        --sobre-primario: #fff;
+        --barra: #b896ad;
+        --pista: #2a313b;
+        --texto: #e4e8ee;
+        --gris: #9aa3ae;
+        --borde: #2c3440;
+        --fondo: #11151b;
+        --blanco: #1a2029;
+        --rojo: #f08072;
+        --rojo-suave: #3d2023;
+        --rojo-borde: #6b3a36;
+        --azul-suave: #1f3150;
+        --gris-suave: #262d37;
+        --fila-hover: #212a35;
+        --fila-principal: #1d242e;
+        --texto-hija: #b5c9ea;
+        --estrella: #f2c335;
+        --boton-cab: rgba(255, 255, 255, 0.1);
+        --velo: rgba(0, 0, 0, 0.5);
+        --sombra: rgba(0, 0, 0, 0.6);
+        --telon: rgba(0, 0, 0, 0.6);
+        --aviso-fondo: #e4e8ee;
+        --aviso-texto: #11151b;
+        --e0b: #1f3150; --e0f: #a9c4f2;
+        --e1b: #43291a; --e1f: #f4b48a;
+        --e2b: #1d3a28; --e2f: #92d6a6;
+        --e3b: #382540; --e3f: #d7a8e3;
+        --e4b: #3d3415; --e4f: #f0d36b;
+        --e5b: #173a42; --e5f: #8fd3e0;
+        --e6b: #43212a; --e6f: #f2a0ad;
+        --e7b: #2e333a; --e7f: #c9ced5;
       }
       * {
         box-sizing: border-box;
@@ -52,7 +126,7 @@
         flex: none;
       }
       .acciones-cab button {
-        background: rgba(255,255,255,.6);
+        background: var(--boton-cab);
         border-color: transparent;
         color: var(--azul);
         padding: 7px 11px;
@@ -98,6 +172,8 @@
       }
       #acceso input {
         font: inherit;
+        background: var(--blanco);
+        color: var(--texto);
         padding: 10px 12px;
         border: 1px solid var(--borde);
         border-radius: 8px;
@@ -163,6 +239,7 @@
         border-radius: 8px;
         font: inherit;
         background: var(--blanco);
+        color: var(--texto);
       }
       .barra-herr input[type=search] {
         flex: 1 1 220px;
@@ -173,17 +250,18 @@
         border-radius: 8px;
         border: 1px solid var(--borde);
         background: var(--blanco);
+        color: var(--texto);
         padding: 9px 14px;
       }
       .btn-prim {
-        background: var(--azul);
-        color: #fff;
-        border-color: var(--azul);
+        background: var(--primario);
+        color: var(--sobre-primario);
+        border-color: var(--primario);
         font-weight: 600;
       }
       .btn-peligro {
         color: var(--rojo);
-        border-color: #f0c4be;
+        border-color: var(--rojo-borde);
       }
 
       .tabla-wrap {
@@ -213,7 +291,7 @@
         cursor: pointer;
       }
       tbody tr:hover {
-        background: #f0f6f2;
+        background: var(--fila-hover);
       }
       .t-nombre {
         font-weight: 700;
@@ -258,15 +336,15 @@
         color: var(--verde-osc);
       }
       .e-En-curso {
-        background: #e3ecfa;
+        background: var(--azul-suave);
         color: var(--azul);
       }
       .e-Pendiente {
-        background: #eef0f2;
+        background: var(--gris-suave);
         color: var(--gris);
       }
       .e-Cancelada {
-        background: #f5e1df;
+        background: var(--rojo-suave);
         color: var(--rojo);
       }
       .fecha {
@@ -287,7 +365,7 @@
       .pbar {
         flex: 1;
         height: 16px;
-        background: #eee;
+        background: var(--pista);
         border-radius: 4px;
         overflow: hidden;
       }
@@ -309,7 +387,7 @@
         color: var(--rojo);
       }
       .estrellas {
-        color: #e0a800;
+        color: var(--estrella);
         letter-spacing: 1px;
         white-space: nowrap;
       }
@@ -339,12 +417,12 @@
         visibility: hidden;
       }
       tr.principal {
-        background: #f7faf8;
+        background: var(--fila-principal);
       }
       tr.hija td.t-nombre {
         padding-left: 42px;
         font-weight: 600;
-        color: #34507f;
+        color: var(--texto-hija);
       }
       tr.hija td.t-nombre::before {
         content: '↳ ';
@@ -363,7 +441,7 @@
         font-size: 12px;
         font-weight: 600;
         color: var(--azul);
-        background: #e3ecfa;
+        background: var(--azul-suave);
         border-radius: 999px;
         padding: 1px 8px;
         margin-left: 4px;
@@ -390,36 +468,36 @@
         white-space: nowrap;
       }
       .etq-0 {
-        background: #e3ecfa;
-        color: #1f4e9c;
+        background: var(--e0b);
+        color: var(--e0f);
       }
       .etq-1 {
-        background: #fde8d7;
-        color: #9a4a0f;
+        background: var(--e1b);
+        color: var(--e1f);
       }
       .etq-2 {
-        background: #e6f4ea;
-        color: #276a3c;
+        background: var(--e2b);
+        color: var(--e2f);
       }
       .etq-3 {
-        background: #f3e5f5;
-        color: #7b3d8a;
+        background: var(--e3b);
+        color: var(--e3f);
       }
       .etq-4 {
-        background: #fff4c2;
-        color: #7a5a00;
+        background: var(--e4b);
+        color: var(--e4f);
       }
       .etq-5 {
-        background: #e0f4f7;
-        color: #11657a;
+        background: var(--e5b);
+        color: var(--e5f);
       }
       .etq-6 {
-        background: #fbe4e6;
-        color: #a1283a;
+        background: var(--e6b);
+        color: var(--e6f);
       }
       .etq-7 {
-        background: #ececec;
-        color: #444;
+        background: var(--e7b);
+        color: var(--e7f);
       }
       .sugerencias {
         display: flex;
@@ -443,10 +521,12 @@
         border-radius: 12px;
         padding: 0;
         width: min(760px, 96vw);
-        box-shadow: 0 20px 60px rgba(0,0,0,.25);
+        box-shadow: 0 20px 60px var(--sombra);
+        background: var(--blanco);
+        color: var(--texto);
       }
       dialog::backdrop {
-        background: rgba(20,30,40,.45);
+        background: var(--telon);
       }
       .dlg-cab {
         background: var(--verde);
@@ -464,6 +544,7 @@
       .dlg-cab button {
         border: none;
         background: transparent;
+        color: var(--azul);
         font-size: 22px;
         padding: 0 6px;
       }
@@ -498,6 +579,8 @@
         border: 1px solid var(--borde);
         border-radius: 8px;
         width: 100%;
+        background: var(--blanco);
+        color: var(--texto);
       }
       .campo textarea {
         min-height: 70px;
@@ -542,8 +625,8 @@
         bottom: 18px;
         left: 50%;
         transform: translateX(-50%);
-        background: var(--texto);
-        color: #fff;
+        background: var(--aviso-fondo);
+        color: var(--aviso-texto);
         padding: 10px 18px;
         border-radius: 8px;
         display: none;
@@ -552,7 +635,7 @@
       #cargando {
         position: fixed;
         inset: 0;
-        background: rgba(255,255,255,.6);
+        background: var(--velo);
         display: none;
         place-items: center;
         font-weight: 600;
@@ -613,6 +696,7 @@
     <header>
       <h1>Junta Directiva AESPI <span>| Seguidor de tareas</span></h1>
       <div class="acciones-cab">
+        <button type="button" id="btnTema" onclick="cambiarTema()" title="Cambiar tema">◐ <span class="txt" id="txtTema">Auto</span></button>
         <button type="button" onclick="recargar()" title="Actualizar datos">↻ <span class="txt">Actualizar</span></button>
         <button type="button" onclick="salir()" title="Cerrar sesión en este dispositivo">⎋ <span class="txt">Salir</span></button>
       </div>
@@ -1310,7 +1394,33 @@
         }
       );
 
-      // Necesario para que la app se pueda instalar
+      /* ---------- Tema claro / oscuro ---------- */
+const TEMAS = ['auto', 'claro', 'oscuro'];
+const NOMBRE_TEMA = { auto: 'Auto', claro: 'Claro', oscuro: 'Oscuro' };
+const prefOscuro = matchMedia('(prefers-color-scheme: dark)');
+
+function leerTema() { try { return localStorage.getItem('aespi_tema') || 'auto'; } catch (e) { return 'auto'; } }
+
+function aplicarTema() {
+  const pref = leerTema();
+  const oscuro = pref === 'oscuro' || (pref === 'auto' && prefOscuro.matches);
+  document.documentElement.dataset.tema = oscuro ? 'oscuro' : 'claro';
+  document.querySelector('meta[name=theme-color]').content = oscuro ? '#11151b' : '#1f4e9c';
+  $('txtTema').textContent = NOMBRE_TEMA[pref];
+  $('btnTema').title = 'Tema: ' + NOMBRE_TEMA[pref] + ' (pulsa para cambiar)';
+}
+
+function cambiarTema() {
+  const sig = TEMAS[(TEMAS.indexOf(leerTema()) + 1) % TEMAS.length];
+  try { localStorage.setItem('aespi_tema', sig); } catch (e) {}
+  aplicarTema();
+  aviso('Tema: ' + NOMBRE_TEMA[sig] + (sig === 'auto' ? ' (según el dispositivo)' : ''));
+}
+
+prefOscuro.addEventListener('change', aplicarTema); // si el dispositivo cambia de modo, la app le sigue
+aplicarTema();
+
+// Necesario para que la app se pueda instalar
       if ('serviceWorker' in navigator) 
         navigator
           .serviceWorker
