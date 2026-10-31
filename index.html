@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Tareas AESPI</title>
+    <meta name="description" content="Seguidor de tareas de la Junta Directiva AESPI">
+    <meta name="theme-color" content="#1f4e9c">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" href="icons/favicon.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Tareas AESPI">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --verde: #c6e6d0;
+        --verde-osc: #2e7d4f;
+        --azul: #1f4e9c;
+        --barra: #9e7f94;
+        --texto: #1c2430;
+        --gris: #6b7280;
+        --borde: #dfe3e8;
+        --fondo: #f6f8f7;
+        --blanco: #fff;
+        --rojo: #c0392b;
+        --ambar: #b7791f;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: 'Source Sans 3', system-ui, sans-serif;
+        color: var(--texto);
+        background: var(--fondo);
+        font-size: 15px;
+      }
+      header {
+        background: var(--verde);
+        padding: calc(18px + env(safe-area-inset-top)) 24px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .acciones-cab {
+        display: flex;
+        gap: 6px;
+        flex: none;
+      }
+      .acciones-cab button {
+        background: rgba(255,255,255,.6);
+        border-color: transparent;
+        color: var(--azul);
+        padding: 7px 11px;
+        font-weight: 600;
+      }
+
+      /* Pantalla de acceso */
+      #acceso {
+        position: fixed;
+        inset: 0;
+        background: var(--fondo);
+        display: none;
+        place-items: center;
+        z-index: 20;
+        padding: 16px;
+      }
+      #acceso form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: var(--blanco);
+        border: 1px solid var(--borde);
+        border-radius: 14px;
+        padding: 28px 24px;
+        width: min(360px, 100%);
+        text-align: center;
+      }
+      #acceso img {
+        width: 88px;
+        height: 88px;
+        margin: 0 auto;
+      }
+      #acceso h2 {
+        margin: 0;
+        font-family: Merriweather, Georgia, serif;
+        color: var(--azul);
+        font-size: 20px;
+      }
+      #acceso p {
+        margin: 0;
+        color: var(--gris);
+        font-size: 14px;
+      }
+      #acceso input {
+        font: inherit;
+        padding: 10px 12px;
+        border: 1px solid var(--borde);
+        border-radius: 8px;
+      }
+      #accesoError {
+        color: var(--rojo);
+        font-weight: 600;
+        min-height: 1.2em;
+      }
+      header h1 {
+        margin: 0;
+        font-family: Merriweather, Georgia, serif;
+        color: var(--azul);
+        font-size: clamp(20px, 3.4vw, 32px);
+        font-weight: 900;
+      }
+      header h1 span {
+        font-weight: 700;
+        opacity: 0.85;
+      }
+      main {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+
+      .resumen {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .kpi {
+        background: var(--blanco);
+        border: 1px solid var(--borde);
+        border-radius: 10px;
+        padding: 10px 16px;
+        min-width: 120px;
+      }
+      .kpi b {
+        display: block;
+        font-size: 24px;
+        color: var(--azul);
+      }
+      .kpi small {
+        color: var(--gris);
+      }
+      .kpi.alerta b {
+        color: var(--rojo);
+      }
+
+      .barra-herr {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      .barra-herr input,
+      .barra-herr select {
+        padding: 9px 10px;
+        border: 1px solid var(--borde);
+        border-radius: 8px;
+        font: inherit;
+        background: var(--blanco);
+      }
+      .barra-herr input[type=search] {
+        flex: 1 1 220px;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        border-radius: 8px;
+        border: 1px solid var(--borde);
+        background: var(--blanco);
+        padding: 9px 14px;
+      }
+      .btn-prim {
+        background: var(--azul);
+        color: #fff;
+        border-color: var(--azul);
+        font-weight: 600;
+      }
+      .btn-peligro {
+        color: var(--rojo);
+        border-color: #f0c4be;
+      }
+
+      .tabla-wrap {
+        background: var(--blanco);
+        border: 1px solid var(--borde);
+        border-radius: 10px;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        text-align: left;
+        font-size: 13px;
+        color: var(--azul);
+        padding: 10px;
+        border-bottom: 2px solid var(--texto);
+        white-space: nowrap;
+      }
+      td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--borde);
+        vertical-align: middle;
+      }
+      tbody tr {
+        cursor: pointer;
+      }
+      tbody tr:hover {
+        background: #f0f6f2;
+      }
+      .t-nombre {
+        font-weight: 700;
+        color: var(--azul);
+        min-width: 220px;
+      }
+      .t-sub {
+        font-size: 12.5px;
+        color: var(--gris);
+        font-weight: 400;
+        margin-top: 2px;
+      }
+      .persona {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--verde);
+        color: var(--azul);
+        display: inline-grid;
+        place-items: center;
+        font-weight: 700;
+        font-size: 13px;
+        flex: none;
+      }
+      .estado {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .e-Completado {
+        background: var(--verde);
+        color: var(--verde-osc);
+      }
+      .e-En-curso {
+        background: #e3ecfa;
+        color: var(--azul);
+      }
+      .e-Pendiente {
+        background: #eef0f2;
+        color: var(--gris);
+      }
+      .e-Cancelada {
+        background: #f5e1df;
+        color: var(--rojo);
+      }
+      .fecha {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .progreso {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 150px;
+      }
+      .progreso b {
+        width: 42px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .pbar {
+        flex: 1;
+        height: 16px;
+        background: #eee;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .pbar i {
+        display: block;
+        height: 100%;
+        background: var(--barra);
+      }
+      .plazo {
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .p-dentro {
+        color: var(--verde-osc);
+      }
+      .p-fuera,
+      .p-retrasada {
+        color: var(--rojo);
+      }
+      .estrellas {
+        color: #e0a800;
+        letter-spacing: 1px;
+        white-space: nowrap;
+      }
+      .vacio {
+        padding: 40px;
+        text-align: center;
+        color: var(--gris);
+      }
+
+      /* Niveles: tarea principal y subtareas */
+      .t-cab {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .plegar {
+        border: none;
+        background: none;
+        padding: 0 4px;
+        font-size: 14px;
+        color: var(--azul);
+        line-height: 1.4;
+        width: 22px;
+        flex: none;
+      }
+      .plegar.oculto {
+        visibility: hidden;
+      }
+      tr.principal {
+        background: #f7faf8;
+      }
+      tr.hija td.t-nombre {
+        padding-left: 42px;
+        font-weight: 600;
+        color: #34507f;
+      }
+      tr.hija td.t-nombre::before {
+        content: '↳ ';
+        color: var(--gris);
+        font-weight: 400;
+      }
+      .btn-sub {
+        font-size: 12px;
+        padding: 2px 8px;
+        margin-top: 4px;
+        color: var(--azul);
+        background: var(--blanco);
+      }
+      .contador {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--azul);
+        background: #e3ecfa;
+        border-radius: 999px;
+        padding: 1px 8px;
+        margin-left: 4px;
+      }
+      .ayuda {
+        font-size: 12px;
+        color: var(--gris);
+      }
+
+      /* Etiquetas */
+      .etqs {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-left: 6px;
+        vertical-align: middle;
+      }
+      .etq {
+        display: inline-block;
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 1px 8px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      .etq-0 {
+        background: #e3ecfa;
+        color: #1f4e9c;
+      }
+      .etq-1 {
+        background: #fde8d7;
+        color: #9a4a0f;
+      }
+      .etq-2 {
+        background: #e6f4ea;
+        color: #276a3c;
+      }
+      .etq-3 {
+        background: #f3e5f5;
+        color: #7b3d8a;
+      }
+      .etq-4 {
+        background: #fff4c2;
+        color: #7a5a00;
+      }
+      .etq-5 {
+        background: #e0f4f7;
+        color: #11657a;
+      }
+      .etq-6 {
+        background: #fbe4e6;
+        color: #a1283a;
+      }
+      .etq-7 {
+        background: #ececec;
+        color: #444;
+      }
+      .sugerencias {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .sugerencias .etq {
+        cursor: pointer;
+        border: 1px solid transparent;
+        opacity: 0.55;
+      }
+      .sugerencias .etq.activa {
+        opacity: 1;
+        border-color: currentColor;
+      }
+
+      /* Ventana de edición */
+      dialog {
+        border: none;
+        border-radius: 12px;
+        padding: 0;
+        width: min(760px, 96vw);
+        box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      }
+      dialog::backdrop {
+        background: rgba(20,30,40,.45);
+      }
+      .dlg-cab {
+        background: var(--verde);
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .dlg-cab h2 {
+        margin: 0;
+        font-family: Merriweather, serif;
+        color: var(--azul);
+        font-size: 18px;
+      }
+      .dlg-cab button {
+        border: none;
+        background: transparent;
+        font-size: 22px;
+        padding: 0 6px;
+      }
+      form {
+        padding: 18px 20px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px 14px;
+      }
+      .campo {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        grid-column: span 2;
+      }
+      .campo.c1 {
+        grid-column: span 1;
+      }
+      .campo.c4 {
+        grid-column: 1 / -1;
+      }
+      .campo label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--azul);
+      }
+      .campo input,
+      .campo select,
+      .campo textarea {
+        font: inherit;
+        padding: 8px 10px;
+        border: 1px solid var(--borde);
+        border-radius: 8px;
+        width: 100%;
+      }
+      .campo textarea {
+        min-height: 70px;
+        resize: vertical;
+      }
+      .seccion {
+        grid-column: 1 / -1;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--gris);
+        border-top: 1px solid var(--borde);
+        padding-top: 10px;
+        margin-top: 4px;
+      }
+      .rango {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .rango input {
+        flex: 1;
+        padding: 0;
+      }
+      .rango output {
+        width: 42px;
+        font-weight: 700;
+      }
+      .dlg-pie {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 6px;
+      }
+      .dlg-pie .btn-peligro {
+        margin-right: auto;
+      }
+
+      #aviso {
+        position: fixed;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--texto);
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 8px;
+        display: none;
+        z-index: 10;
+      }
+      #cargando {
+        position: fixed;
+        inset: 0;
+        background: rgba(255,255,255,.6);
+        display: none;
+        place-items: center;
+        font-weight: 600;
+        color: var(--azul);
+        z-index: 5;
+      }
+
+      /* Móvil: cada tarea como tarjeta */
+      @media (max-width: 760px) {
+        header {
+          padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+        }
+        .acciones-cab .txt {
+          display: none;
+        }
+        thead {
+          display: none;
+        }
+        table,
+        tbody,
+        td,
+        tr {
+          display: block;
+          width: 100%;
+        }
+        tbody tr {
+          border-bottom: 1px solid var(--borde);
+          padding: 10px 6px;
+        }
+        td {
+          border: none;
+          padding: 4px 8px;
+        }
+        td[data-l]::before {
+          content: attr(data-l) ': ';
+          color: var(--gris);
+          font-size: 12.5px;
+        }
+        td.fecha,
+        td[data-l] {
+          display: inline-block;
+          width: auto;
+        }
+        form {
+          grid-template-columns: 1fr 1fr;
+        }
+        .campo,
+        .campo.c1 {
+          grid-column: span 1;
+        }
+        .campo.c2m {
+          grid-column: 1 / -1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Junta Directiva AESPI <span>| Seguidor de tareas</span></h1>
+      <div class="acciones-cab">
+        <button type="button" onclick="recargar()" title="Actualizar datos">↻ <span class="txt">Actualizar</span></button>
+        <button type="button" onclick="salir()" title="Cerrar sesión en este dispositivo">⎋ <span class="txt">Salir</span></button>
+      </div>
+    </header>
+
+    <div id="acceso">
+      <form onsubmit="entrar(event)">
+        <img src="icons/icon-192.png" alt="">
+        <h2>Tareas AESPI</h2>
+        <p>Escribe la clave de acceso de la Junta Directiva. Solo se pide una vez en este dispositivo.</p>
+        <input type="password" id="inClave" placeholder="Clave de acceso" autocomplete="current-password" required>
+        <div id="accesoError"></div>
+        <button type="submit" class="btn-prim">Entrar</button>
+      </form>
+    </div>
+
+    <main>
+      <div class="resumen" id="resumen"></div>
+
+      <div class="barra-herr">
+        <input type="search" id="fBuscar" placeholder="Buscar tarea, localidad, participantes…">
+        <select id="fResp">
+          <option value="">Todos los responsables</option>
+        </select>
+        <select id="fEstado">
+          <option value="">Todos los estados</option>
+          <option value="abiertas">Abiertas (pendiente / en curso)</option>
+          <option>Pendiente</option>
+          <option>En curso</option>
+          <option>Completado</option>
+          <option>Cancelada</option>
+          <option value="retrasadas">Retrasadas</option>
+        </select>
+        <select id="fEtiqueta">
+          <option value="">Todas las etiquetas</option>
+        </select>
+        <button class="btn-prim" onclick="abrir()">+ Nueva tarea</button>
+      </div>
+
+      <div class="tabla-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tarea</th>
+              <th>Responsable</th>
+              <th>Estado</th>
+              <th>Inicio</th>
+              <th>Fin previsto</th>
+              <th>% completado</th>
+              <th>Realización</th>
+              <th>Plazo</th>
+              <th>Coste</th>
+              <th>Valoración</th>
+            </tr>
+          </thead>
+          <tbody id="filas">
+            <tr>
+              <td colspan="10" class="vacio">Cargando…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <dialog id="dlg">
+      <div class="dlg-cab">
+        <h2 id="dlgTitulo">Nueva tarea</h2>
+        <button type="button" onclick="cerrar()" aria-label="Cerrar">×</button>
+      </div>
+      <form id="frm" onsubmit="guardar(event)">
+        <input type="hidden" name="id">
+        <div class="campo c4">
+          <label>Tarea *</label><input name="tarea" required></div>
+        <div class="campo c4">
+          <label>Tarea principal</label>
+          <select name="padre" id="selPadre" onchange="cambioPadre()"></select>
+          <span class="ayuda" id="ayudaPadre"></span></div>
+        <div class="campo c4">
+          <label>Etiquetas</label>
+          <input name="etiquetas" id="inEtq" placeholder="Separadas por comas, p. ej.: Asamblea, Urgente" oninput="pintarSugerencias()" autocomplete="off">
+          <div class="sugerencias" id="sugEtq"></div>
+        </div>
+        <div class="campo c2m">
+          <label>Responsable</label>
+          <select name="responsable" id="selResp"></select>
+        </div>
+        <div class="campo">
+          <label>Estado</label>
+          <select name="estado" onchange="cambioEstado()">
+            <option>Pendiente</option>
+            <option>En curso</option>
+            <option>Completado</option>
+            <option>Cancelada</option>
+          </select>
+        </div>
+        <div class="campo c1">
+          <label>Fecha de inicio</label><input type="date" name="inicio"></div>
+        <div class="campo c1">
+          <label>Fin previsto</label><input type="date" name="fin"></div>
+        <div class="campo c1">
+          <label>Fecha de realización</label><input type="date" name="realizacion"></div>
+        <div class="campo c1">
+          <label>% completado</label>
+          <div class="rango">
+            <output id="outProgreso">0%</output>
+            <span class="ayuda" id="ayudaProgreso"></span></div>
+        </div>
+
+        <div class="seccion">Detalles de la actividad</div>
+        <div class="campo c1">
+          <label>Fecha</label><input type="date" name="fecha"></div>
+        <div class="campo c1">
+          <label>Localidad</label><input name="localidad"></div>
+        <div class="campo c1">
+          <label>Coste (€)</label><input type="number" name="coste" min="0" step="0.01"></div>
+        <div class="campo c1">
+          <label>Valoración</label>
+          <select name="valoracion">
+            <option value="">—</option>
+            <option value="1">★ 1</option>
+            <option value="2">★★ 2</option>
+            <option value="3">★★★ 3</option>
+            <option value="4">★★★★ 4</option>
+            <option value="5">★★★★★ 5</option>
+          </select>
+        </div>
+        <div class="campo c4">
+          <label>Participantes</label><input name="participantes" placeholder="Nombres separados por comas"></div>
+        <div class="campo c4">
+          <label>Notas / Acta</label>
+          <textarea name="notas" placeholder="Ej.: Acta 29/06/2026"></textarea>
+        </div>
+
+        <div class="dlg-pie">
+          <button type="button" class="btn-peligro" id="btnBorrar" onclick="borrar()">Eliminar</button>
+          <button type="button" onclick="cerrar()">Cancelar</button>
+          <button type="submit" class="btn-prim">Guardar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="cargando">Guardando…</div>
+    <div id="aviso"></div>
+
+    <script>
+      let DATOS = {
+        tareas: [],
+        miembros: []
+      };
+      const $ = id => document.getElementById(id);
+      const frm = $('frm');
+
+      function hoy() {
+        const d = new Date();
+        return new Date(d - d.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 10);
+      }
+      function fmt(s) {
+        if (!s) 
+          return '';
+        const [y, m, d] = s.split('-');
+        return `${ + d}/${ + m}/${y}`;
+      }
+      function esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+      }
+      function euros(n) {
+        return n === '' || n == null
+          ? ''
+          : Number(n).toLocaleString('es-ES', {
+            style: 'currency',
+            currency: 'EUR'
+          });
+      }
+
+      function plazo(t) {
+        if (t.realizacion && t.fin) 
+          return t.realizacion <= t.fin
+            ? 'Dentro de plazo'
+            : 'Fuera de plazo';
+        if (t.fin && t.fin < hoy() && !['Completado', 'Cancelada'].includes(t.estado)) 
+          return 'Retrasada';
+        return '';
+      }
+
+      function avatar(nombre) {
+        const m = DATOS
+          .miembros
+          .find(x => x.nombre === nombre);
+        const ini = esc(String(nombre || '?').split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase());
+        // Si la foto no carga, se ven las iniciales
+        if (m && m.foto) 
+          return `<img class="avatar" src="${esc(m.foto)}" alt="${esc(nombre)}" referrerpolicy="no-referrer"
+      onerror="this.outerHTML='<span class=&quot;avatar&quot;>${ini}</span>'">`;
+        return `<span class="avatar">${ini}</span>`;
+      }
+
+      /* ---------- Conexión con Apps Script ---------- */
+
+      // Pega aquí la URL de la implementación de Apps Script (la que termina en /exec)
+      const API_URL = 'https://script.google.com/macros/s/AKfycbyIehsQgRVC_U6LStcKAbKPzfK0ftwud52lvAjiBadH9SXMYbb8d3tJHNDScRPUrj2mgQ/exec';
+
+      function leerClave() {
+        try {
+          return localStorage.getItem('aespi_clave') || '';
+        } catch (e) {
+          return '';
+        }
+      }
+      function guardarClave(c) {
+        try {
+          c
+            ? localStorage.setItem('aespi_clave', c)
+            : localStorage.removeItem('aespi_clave');
+        } catch (e) {}
+      }
+
+      // Envía una petición a Apps Script. El tipo text/plain evita la comprobación previa (CORS) del navegador.
+      async function api(accion, extra) {
+        if (!/^https:\/\/script\.google\.com\//.test(API_URL)) 
+          throw new Error('Falta poner la URL de Apps Script en index.html (API_URL).');
+        let res;
+        try {
+          const r = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify(Object.assign({
+              accion,
+              clave: leerClave()
+            }, extra || {}))
+          });
+          res = await r.json();
+        } catch (e) {
+          throw new Error('No se pudo conectar. Comprueba la conexión a internet.');
+        }
+        if (!res.ok) {
+          if (res.claveIncorrecta) {
+            guardarClave('');
+            mostrarAcceso('La clave no es correcta.');
+          }
+          throw new Error(res.error);
+        }
+        return res.datos;
+      }
+
+      function llamar(accion, extra, mensaje) {
+        return api(accion, extra)
+          .then(d => {
+            recibir(d);
+            if (mensaje) 
+              aviso(mensaje);
+            }
+          )
+          .catch(fallo);
+      }
+
+      function mostrarAcceso(error) {
+        $('cargando').style.display = 'none';
+        $('accesoError').textContent = error || '';
+        $('acceso').style.display = 'grid';
+        $('inClave').value = '';
+        setTimeout(() => $('inClave').focus(), 50);
+      }
+
+      function entrar(ev) {
+        ev.preventDefault();
+        guardarClave($('inClave').value.trim());
+        $('accesoError').textContent = 'Comprobando…';
+        api('datos')
+          .then(d => {
+            $('acceso').style.display = 'none';
+            recibir(d);
+          })
+          .catch(e => {
+            if ($('acceso').style.display !== 'none') 
+              $('accesoError').textContent = e.message;
+            }
+          );
+      }
+
+      function salir() {
+        if (!confirm('¿Cerrar sesión en este dispositivo? Tendrás que volver a escribir la clave.')) 
+          return;
+        guardarClave('');
+        DATOS = {
+          tareas: [],
+          miembros: []
+        };
+        pintar();
+        mostrarAcceso();
+      }
+
+      function recargar() {
+        $('cargando').style.display = 'grid';
+        cargar();
+      }
+
+      function cargar() {
+        if (!leerClave()) 
+          return mostrarAcceso();
+        llamar('datos');
+      }
+
+      function recibir(d) {
+        DATOS = d;
+        $('cargando').style.display = 'none';
+        const nombres = [...new Set(DATOS.miembros.map(m => m.nombre).concat(DATOS.tareas.map(t => t.responsable)).filter(Boolean))];
+        const fr = $('fResp'),
+          sel = fr.value;
+        fr.innerHTML = '<option value="">Todos los responsables</option>' + nombres
+          .map(n => `<option>${esc(n)}</option>`)
+          .join('');
+        fr.value = sel;
+        $('selResp').innerHTML = '<option value="">—</option>' + nombres
+          .map(n => `<option>${esc(n)}</option>`)
+          .join('');
+        const fe = $('fEtiqueta'),
+          selE = fe.value;
+        fe.innerHTML = '<option value="">Todas las etiquetas</option>' + todasEtiquetas()
+          .map(n => `<option>${esc(n)}</option>`)
+          .join('');
+        fe.value = selE;
+        pintar();
+      }
+
+      /* ---------- Etiquetas ---------- */
+      function etiquetasDe(t) {
+        return String(t.etiquetas || '')
+          .split(',')
+          .map(x => x.trim())
+          .filter(Boolean);
+      }
+      // Etiquetas que se muestran: las propias o, si una subtarea no tiene, las de su tarea principal
+      function etiquetasVisibles(t) {
+        const propias = etiquetasDe(t);
+        if (propias.length || !t.padre) 
+          return propias;
+        return etiquetasDe(DATOS.tareas.find(x => x.id === t.padre) || {});
+      }
+      function todasEtiquetas() {
+        const mapa = new Map();
+        DATOS
+          .tareas
+          .forEach(t => etiquetasDe(t).forEach(e => {
+            if (!mapa.has(e.toLowerCase())) 
+              mapa.set(e.toLowerCase(), e);
+            }
+          ));
+        return [...mapa.values()].sort((a, b) => a.localeCompare(b, 'es'));
+      }
+      // Cada etiqueta tiene siempre el mismo color, calculado a partir de su nombre
+      function colorEtq(e) {
+        let h = 0;
+        for (const c of e.toLowerCase()) 
+          h = (h * 31 + c.charCodeAt(0)) >>> 0;
+        return h % 8;
+      }
+      function chip(e) {
+        return `<span class="etq etq-${colorEtq(e)}">${esc(e)}</span>`;
+      }
+
+      function pintarSugerencias() {
+        const puestas = etiquetasDe({etiquetas: $('inEtq').value}).map(x => x.toLowerCase());
+        $('sugEtq').innerHTML = todasEtiquetas()
+          .map(
+            e => `<span class="etq etq-${colorEtq(e)} ${puestas.includes(e.toLowerCase())
+            ? 'activa'
+            : ''}" onclick="alternarEtq(this.textContent)">${esc(e)}</span>`)
+          .join('');
+      }
+      function alternarEtq(e) {
+        let lista = etiquetasDe({etiquetas: $('inEtq').value});
+        lista = lista.some(x => x.toLowerCase() === e.toLowerCase())
+          ? lista.filter(x => x.toLowerCase() !== e.toLowerCase())
+          : lista.concat(e);
+        $('inEtq').value = lista.join(', ');
+        pintarSugerencias();
+      }
+
+      function fallo(e) {
+        $('cargando').style.display = 'none';
+        aviso('Error: ' + (
+        e && e.message || e), 6000);
+      }
+
+      function aviso(txt, ms = 2500) {
+        const a = $('aviso');
+        a.textContent = txt;
+        a.style.display = 'block';
+        clearTimeout(a._t);
+        a._t = setTimeout(() => a.style.display = 'none', ms);
+      }
+
+      function pintar() {
+        const q = $('fBuscar')
+            .value
+            .trim()
+            .toLowerCase(),
+          r = $('fResp').value,
+          e = $('fEstado').value;
+        const fe = $('fEtiqueta')
+          .value
+          .toLowerCase();
+        const ts = DATOS.tareas;
+
+        const abiertas = ts.filter(t => !['Completado', 'Cancelada'].includes(t.estado));
+        const retr = ts.filter(t => plazo(t) === 'Retrasada');
+        const coste = ts.reduce((s, t) => s + (Number(t.coste) || 0), 0);
+        $('resumen').innerHTML = `
+    <div class="kpi"><b>${ts
+          .length}</b><small>Tareas</small></div>
+    <div class="kpi"><b>${abiertas
+          .length}</b><small>Abiertas</small></div>
+    <div class="kpi"><b>${ts
+          .filter(t => t.estado === 'Completado')
+          .length}</b><small>Completadas</small></div>
+    <div class="kpi ${retr
+          .length
+            ? 'alerta'
+            : ''}"><b>${retr.length}</b><small>Retrasadas</small></div>
+    <div class="kpi"><b>${euros(coste) || '0 €'}</b><small>Coste total</small></div>`;
+
+        const cumple = t => {
+          if (r && t.responsable !== r) 
+            return false;
+          if (e === 'abiertas' && ['Completado', 'Cancelada'].includes(t.estado)) 
+            return false;
+          if (e === 'retrasadas' && plazo(t) !== 'Retrasada') 
+            return false;
+          if (e && !['abiertas', 'retrasadas'].includes(e) && t.estado !== e) 
+            return false;
+          if (fe && !etiquetasVisibles(t).some(x => x.toLowerCase() === fe)) 
+            return false;
+          if (q && ![
+            t.tarea,
+            t.localidad,
+            t.participantes,
+            t.notas,
+            t.responsable,
+            etiquetasVisibles(t).join(' ')
+          ].join(' ').toLowerCase().includes(q)) 
+            return false;
+          return true;
+        };
+        const orden = (a, b) => {
+          const ca = ['Completado', 'Cancelada'].includes(a.estado),
+            cb = ['Completado', 'Cancelada'].includes(b.estado);
+          if (ca !== cb) 
+            return ca
+              ? 1
+              : -1;
+          return String(a.fin || '9999').localeCompare(String(b.fin || '9999'));
+        };
+
+        // Árbol de dos niveles. Una tarea principal se muestra si ella o alguna de sus subtareas cumple los filtros.
+        const ids = new Set(ts.map(t => String(t.id)));
+        const raices = ts
+          .filter(t => !t.padre || !ids.has(String(t.padre)))
+          .sort(orden);
+        const html = [];
+        for (const t of raices) {
+          const hijas = hijasDe(t.id).sort(orden);
+          const hijasVis = hijas.filter(cumple);
+          if (!cumple(t) && !hijasVis.length) 
+            continue;
+          html.push(fila(t, hijas));
+          if (!PLEGADAS.has(String(t.id))) 
+            hijasVis.forEach(h => html.push(fila(h)));
+          }
+        
+        $('filas').innerHTML = html.length
+          ? html.join('')
+          : `<tr><td colspan="10" class="vacio">${ts.length
+            ? 'Ninguna tarea coincide con los filtros.'
+            : 'Aún no hay tareas. Pulsa «+ Nueva tarea».'}</td></tr>`;
+      }
+
+      // % de avance automático: por estado, o media de las subtareas (sin contar las canceladas)
+      const PROGRESO_POR_ESTADO = {
+        'Pendiente': 0,
+        'En curso': 50,
+        'Completado': 100,
+        'Cancelada': 0
+      };
+      function progreso(t, estado) {
+        const hijas = t.id
+          ? hijasDe(t.id)
+          : [];
+        if (!hijas.length) 
+          return PROGRESO_POR_ESTADO[estado ?? t.estado] || 0;
+        const validas = hijas.filter(h => h.estado !== 'Cancelada');
+        return validas.length
+          ? Math.round(validas.reduce((s, h) => s + (PROGRESO_POR_ESTADO[h.estado] || 0), 0) / validas.length)
+          : 0;
+      }
+
+      const PLEGADAS = new Set();
+      function hijasDe(id) {
+        return DATOS
+          .tareas
+          .filter(x => String(x.padre) === String(id));
+      }
+      function plegar(ev, id) {
+        ev.stopPropagation();
+        PLEGADAS.has(id)
+          ? PLEGADAS.delete(id)
+          : PLEGADAS.add(id);
+        pintar();
+      }
+
+      function fila(t, hijas) {
+        const esHija = !hijas;
+        const tieneHijas = hijas && hijas.length;
+        const p = plazo(t);
+        const pc = progreso(t);
+        const coste = tieneHijas
+          ? (Number(t.coste) || 0) + hijas.reduce((s, h) => s + (Number(h.coste) || 0), 0)
+          : t.coste;
+        const sub = [
+          t.fecha && fmt(t.fecha),
+          t.localidad,
+          t.notas
+        ]
+          .filter(Boolean)
+          .map(esc)
+          .join(' · ');
+        const id = esc(t.id);
+        const lasEtq = etiquetasVisibles(t);
+        const etqs = lasEtq.length
+          ? `<span class="etqs">${lasEtq
+            .map(chip)
+            .join('')}</span>`
+          : '';
+        let nombre;
+        if (esHija) {
+          nombre = esc(t.tarea) + etqs;
+        } else {
+          const hechas = tieneHijas
+            ? hijas
+              .filter(h => h.estado === 'Completado')
+              .length
+            : 0;
+          nombre = `<div class="t-cab">
+        <button class="plegar ${tieneHijas
+            ? ''
+            : 'oculto'}" onclick="plegar(event,'${id}')" title="Mostrar/ocultar subtareas">${PLEGADAS.has(String(t.id))
+              ? '▸'
+              : '▾'}</button>
+        <div>${esc(t.tarea)}${tieneHijas
+                ? `<span class="contador">${hechas}/${hijas.length}</span>`
+                : ''}${etqs}
+          ${sub
+                  ? `<div class="t-sub">${sub}</div>`
+                  : ''}
+          <button class="btn-sub" onclick="event.stopPropagation(); abrir(null,'${id}')">+ subtarea</button></div></div>`;
+        }
+        return `<tr class="${esHija
+          ? 'hija'
+          : 'principal'}" onclick="abrir('${id}')">
+      <td class="t-nombre">${nombre}${esHija && sub
+            ? `<div class="t-sub">${sub}</div>`
+            : ''}</td>
+      <td><div class="persona">${avatar(t.responsable)}${esc(t.responsable)}</div></td>
+      <td><span class="estado e-${esc(String(t.estado).replace(/\s/g, '-'))}">${esc(t.estado)}</span></td>
+      <td class="fecha" data-l="Inicio">${fmt(t.inicio)}</td>
+      <td class="fecha" data-l="Fin">${fmt(t.fin)}</td>
+      <td><div class="progreso"><b>${pc}%</b><div class="pbar"><i style="width:${pc}%"></i></div></div></td>
+      <td class="fecha" data-l="Realizada">${fmt(t.realizacion)}</td>
+      <td><span class="plazo p-${p
+              .split(' ')[0]
+              .toLowerCase()}">${p}</span></td>
+      <td class="fecha" ${tieneHijas
+                ? 'title="Incluye el coste de las subtareas"'
+                : ''}>${euros(coste)}</td>
+      <td class="estrellas">${t.valoracion
+                  ? '★'.repeat(t.valoracion)
+                  : ''}</td>
+    </tr>`;
+      }
+
+      function abrir(id, padre) {
+        const t = id
+          ? DATOS
+            .tareas
+            .find(x => x.id === id)
+          : {
+            estado: 'Pendiente',
+            inicio: hoy(),
+            progreso: 0,
+            padre: padre || ''
+          };
+        // Una subtarea nueva toma por defecto las etiquetas de su tarea principal
+        if (!id && padre) 
+          t.etiquetas = (DATOS.tareas.find(x => x.id === padre) || {}).etiquetas || '';
+        const tieneHijas = id && hijasDe(id).length > 0;
+
+        // Solo las tareas de nivel 1 (y distintas de esta) pueden ser tarea principal
+        const posibles = DATOS
+          .tareas
+          .filter(x => !x.padre && x.id !== id);
+        $('selPadre').innerHTML = '<option value="">— Ninguna (es una tarea de nivel 1) —</option>' + posibles
+          .map(x => `<option value="${esc(x.id)}">${esc(x.tarea)}</option>`)
+          .join('');
+        $('selPadre').disabled = tieneHijas;
+        $('ayudaPadre').textContent = tieneHijas
+          ? 'Tiene subtareas, así que es una tarea de nivel 1. Su % se calcula con el de sus subtareas.'
+          : '';
+
+        frm.reset();
+        for (const el of frm.elements) 
+          if (el.name) 
+            el.value = t[el.name] ?? '';
+      ABIERTA = t;
+        mostrarProgreso();
+        pintarSugerencias();
+        $('dlgTitulo').textContent = id
+          ? 'Editar tarea'
+          : (
+            padre
+            ? 'Nueva subtarea'
+            : 'Nueva tarea');
+        $('btnBorrar').style.display = id
+          ? ''
+          : 'none';
+        $('dlg').showModal();
+      }
+      function cerrar() {
+        $('dlg').close();
+      }
+
+      let ABIERTA = null; // tarea abierta en el formulario
+      function mostrarProgreso() {
+        const conHijas = ABIERTA && ABIERTA.id && hijasDe(ABIERTA.id).length;
+        $('outProgreso').value = progreso(ABIERTA || {}, frm.estado.value) + '%';
+        $('ayudaProgreso').textContent = conHijas
+          ? 'media de las subtareas'
+          : 'según el estado';
+      }
+
+      // Al elegir tarea principal en el formulario, si aún no hay etiquetas, se copian las suyas
+      function cambioPadre() {
+        const p = DATOS
+          .tareas
+          .find(x => x.id === $('selPadre').value);
+        if (p && !$('inEtq').value.trim()) {
+          $('inEtq').value = p.etiquetas || '';
+          pintarSugerencias();
+        }
+      }
+
+      function cambioEstado() {
+        if (frm.estado.value === 'Completado' && !frm.realizacion.value) 
+          frm.realizacion.value = hoy();
+        mostrarProgreso();
+      }
+
+      function guardar(ev) {
+        ev.preventDefault();
+        const t = Object.fromEntries(new FormData(frm));
+        if ($('selPadre').disabled) 
+          t.padre = ''; // un select desactivado no se envía
+        cerrar();
+        $('cargando').style.display = 'grid';
+        llamar('guardar', {
+          tarea: t
+        }, 'Tarea guardada');
+      }
+
+      function borrar() {
+        const id = frm
+          .elements
+          .namedItem('id')
+          .value; // frm.id sería el id del propio formulario
+        const n = hijasDe(id).length;
+        const msg = n
+          ? `¿Eliminar esta tarea y sus ${n} subtarea(s)? No se puede deshacer.`
+          : '¿Eliminar esta tarea? No se puede deshacer.';
+        if (!confirm(msg)) 
+          return;
+        cerrar();
+        $('cargando').style.display = 'grid';
+        llamar('eliminar', {
+          id
+        }, 'Tarea eliminada');
+      }['fBuscar', 'fResp', 'fEstado', 'fEtiqueta'].forEach(id => $(id).addEventListener('input', pintar));
+      cargar();
+
+      // Al volver a la app después de un rato, se actualizan los datos
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && leerClave()) 
+          cargar();
+        }
+      );
+
+      // Necesario para que la app se pueda instalar
+      if ('serviceWorker' in navigator) 
+        navigator
+          .serviceWorker
+          .register('sw.js')
+          .catch(() => {});
+    </script>
+  </body>
+</html>
