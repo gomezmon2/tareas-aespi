@@ -1437,12 +1437,15 @@
         let opciones = conCorreo.map(m => `<option value="${esc(m.email.toLowerCase())}">${esc(m.nombre)} — ${esc(m.email)}</option>`);
         if (id && t.creadoPor && !conCorreo.some(m => m.email.toLowerCase() === String(t.creadoPor).toLowerCase()))
           opciones.push(`<option value="${esc(t.creadoPor)}">${esc(t.creadoPor)}</option>`); // ya no está en Miembros
+        const fijado = !!(id && t.creadoPor); // ya tiene creador: no se puede cambiar
         $('selCreador').innerHTML = `<option value="">${id ? '— (no consta)' : '— Elige quién crea la tarea —'}</option>` + opciones.join('');
-        $('selCreador').disabled = !!id;
+        $('selCreador').disabled = fijado;
         $('selCreador').required = !id;
-        $('ayudaCreador').textContent = id
-          ? 'No se puede cambiar una vez creada la tarea.'
-          : (conCorreo.length ? '' : 'Añade el correo de cada miembro en la columna Email de la pestaña Miembros.');
+        $('ayudaCreador').textContent = fijado
+          ? 'No se puede cambiar una vez indicado.'
+          : id
+            ? 'Esta tarea no tiene creador: puedes indicarlo ahora (después no se podrá cambiar).'
+            : (conCorreo.length ? '' : 'Añade el correo de cada miembro en la columna Email de la pestaña Miembros.');
 
         frm.reset();
         for (const el of frm.elements)
