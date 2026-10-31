@@ -274,6 +274,25 @@
         width: 100%;
         border-collapse: collapse;
       }
+      /* Columnas ordenables */
+      th[data-col] {
+        cursor: pointer;
+        user-select: none;
+      }
+      th[data-col]:hover {
+        text-decoration: underline;
+      }
+      th[data-col]::after {
+        content: attr(data-flecha);
+        margin-left: 4px;
+        font-size: 10px;
+      }
+      th.ordenada {
+        background: var(--azul-suave);
+      }
+      .solo-movil {
+        display: none;
+      }
       th {
         text-align: left;
         font-size: 13px;
@@ -654,6 +673,9 @@
         thead {
           display: none;
         }
+        .solo-movil {
+          display: block;
+        }
         table,
         tbody,
         td,
@@ -733,6 +755,7 @@
         <select id="fEtiqueta">
           <option value="">Todas las etiquetas</option>
         </select>
+        <select id="fOrden" class="solo-movil" aria-label="Ordenar por"></select>
         <button class="btn-prim" onclick="abrir()">+ Nueva tarea</button>
       </div>
 
@@ -740,16 +763,16 @@
         <table>
           <thead>
             <tr>
-              <th>Tarea</th>
-              <th>Responsable</th>
-              <th>Estado</th>
-              <th>Inicio</th>
-              <th>Fin previsto</th>
-              <th>% completado</th>
-              <th>Realización</th>
-              <th>Plazo</th>
-              <th>Coste</th>
-              <th>Valoración</th>
+              <th data-col="tarea">Tarea</th>
+              <th data-col="responsable">Responsable</th>
+              <th data-col="estado">Estado</th>
+              <th data-col="inicio">Inicio</th>
+              <th data-col="fin">Fin previsto</th>
+              <th data-col="progreso">% completado</th>
+              <th data-col="realizacion">Realización</th>
+              <th data-col="plazo">Plazo</th>
+              <th data-col="coste">Coste</th>
+              <th data-col="valoracion">Valoración</th>
             </tr>
           </thead>
           <tbody id="filas">
@@ -949,7 +972,9 @@
         return api(accion, extra)
           .then(d => {
             recibir(d);
-            if (mensaje) 
+            if (d.aviso)
+              aviso(d.aviso, 7000); // p. ej., no se pudo actualizar el calendario
+            else if (mensaje)
               aviso(mensaje);
             }
           )
@@ -1144,15 +1169,7 @@
             return false;
           return true;
         };
-        const orden = (a, b) => {
-          const ca = ['Completado', 'Cancelada'].includes(a.estado),
-            cb = ['Completado', 'Cancelada'].includes(b.estado);
-          if (ca !== cb) 
-            return ca
-              ? 1
-              : -1;
-          return String(a.fin || '9999').localeCompare(String(b.fin || '9999'));
-        };
+        const orden = comparar;
 
         // Árbol de dos niveles. Una tarea principal se muestra si ella o alguna de sus subtareas cumple los filtros.
         const ids = new Set(ts.map(t => String(t.id)));
@@ -1195,6 +1212,89 @@
           ? Math.round(validas.reduce((s, h) => s + (PROGRESO_POR_ESTADO[h.estado] || 0), 0) / validas.length)
           : 0;
       }
+
+      /* ---------- Orden de la lista ----------
+       * Automático: abiertas primero y, dentro de cada grupo, por fin previsto.
+       * Al pulsar una columna: ascendente → descendente → automático. Las vacías van siempre al final.
+       */
+      const ORDEN_ESTADO = { 'Pendiente': 0, 'En curso': 1, 'Completado': 2, 'Cancelada': 3 };
+      const ORDEN_PLAZO = { 'Retrasada': 0, 'Fuera de plazo': 1, 'Dentro de plazo': 2 };
+      const NOMBRE_COL = { tarea: 'Tarea', responsable: 'Responsable', estado: 'Estado', inicio: 'Inicio', fin: 'Fin previsto',
+        progreso: '% completado', realizacion: 'Realización', plazo: 'Plazo', coste: 'Coste', valoracion: 'Valoración' };
+
+      let ORDEN = { col: '', dir: 1 };
+      try { ORDEN = JSON.parse(localStorage.getItem('aespi_orden')) || ORDEN; } catch (e) {}
+
+      function ordenAuto(a, b) {
+        const ca = ['Completado', 'Cancelada'].includes(a.estado), cb = ['Completado', 'Cancelada'].includes(b.estado);
+        if (ca !== cb) return ca ? 1 : -1;
+        return String(a.fin || '9999').localeCompare(String(b.fin || '9999'));
+      }
+
+      function costeTotal(t) {
+        const hijas = hijasDe(t.id);
+        if (!hijas.length) return t.coste;
+        return (Number(t.coste) || 0) + hijas.reduce((s, h) => s + (Number(h.coste) || 0), 0);
+      }
+
+      function valorOrden(t, col) {
+        switch (col) {
+          case 'estado': return ORDEN_ESTADO[t.estado] ?? 9;
+          case 'progreso': return progreso(t);
+          case 'plazo': return plazo(t) ? ORDEN_PLAZO[plazo(t)] : '';
+          case 'coste': { const c = costeTotal(t); return c === '' || c == null ? '' : Number(c); }
+          case 'valoracion': return t.valoracion ? Number(t.valoracion) : '';
+          default: return t[col] ?? '';
+        }
+      }
+
+      function comparar(a, b) {
+        if (!ORDEN.col) return ordenAuto(a, b);
+        const va = valorOrden(a, ORDEN.col), vb = valorOrden(b, ORDEN.col);
+        const vaVacio = va === '', vbVacio = vb === '';
+        if (vaVacio || vbVacio) return vaVacio && vbVacio ? ordenAuto(a, b) : (vaVacio ? 1 : -1);
+        const c = typeof va === 'number' && typeof vb === 'number'
+          ? va - vb
+          : String(va).localeCompare(String(vb), 'es', { sensitivity: 'base', numeric: true });
+        return c * ORDEN.dir || ordenAuto(a, b);
+      }
+
+      function ordenarPor(col) {
+        if (ORDEN.col !== col) ORDEN = { col, dir: 1 };
+        else if (ORDEN.dir === 1) ORDEN = { col, dir: -1 };
+        else ORDEN = { col: '', dir: 1 };
+        guardarOrden();
+      }
+
+      function guardarOrden() {
+        try { localStorage.setItem('aespi_orden', JSON.stringify(ORDEN)); } catch (e) {}
+        marcarOrden();
+        pintar();
+      }
+
+      // Flechas en los títulos de columna y valor del desplegable (móvil)
+      function marcarOrden() {
+        document.querySelectorAll('th[data-col]').forEach(th => {
+          const activa = th.dataset.col === ORDEN.col;
+          th.classList.toggle('ordenada', activa);
+          th.dataset.flecha = activa ? (ORDEN.dir === 1 ? '▲' : '▼') : '';
+          th.title = activa
+            ? (ORDEN.dir === 1 ? 'Pulsa para orden descendente' : 'Pulsa para volver al orden automático')
+            : 'Ordenar por ' + NOMBRE_COL[th.dataset.col];
+          th.setAttribute('aria-sort', activa ? (ORDEN.dir === 1 ? 'ascending' : 'descending') : 'none');
+        });
+        $('fOrden').value = ORDEN.col ? ORDEN.col + ':' + ORDEN.dir : '';
+      }
+
+      document.querySelectorAll('th[data-col]').forEach(th => th.addEventListener('click', () => ordenarPor(th.dataset.col)));
+      $('fOrden').innerHTML = '<option value="">Orden: automático</option>' + Object.entries(NOMBRE_COL)
+        .map(([c, n]) => `<option value="${c}:1">${n} ▲</option><option value="${c}:-1">${n} ▼</option>`).join('');
+      $('fOrden').addEventListener('change', e => {
+        const [col, dir] = e.target.value.split(':');
+        ORDEN = col ? { col, dir: Number(dir) } : { col: '', dir: 1 };
+        guardarOrden();
+      });
+      marcarOrden();
 
       const PLEGADAS = new Set();
       function hijasDe(id) {
