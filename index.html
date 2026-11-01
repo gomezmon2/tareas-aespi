@@ -149,7 +149,17 @@
         gap: 6px;
         flex: none;
       }
-      .acciones-cab button {
+      .acciones-cab .boton-cab {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .acciones-cab button,
+      .acciones-cab .boton-cab {
         background: var(--boton-cab);
         border-color: transparent;
         color: var(--azul);
@@ -799,6 +809,7 @@
       <h1>Junta Directiva AESPI <span>| Seguidor de tareas</span></h1>
       <div class="acciones-cab">
         <span class="usuario-cab" id="usuarioCab"></span>
+        <a class="boton-cab" href="manual.pdf" target="_blank" rel="noopener" title="Abrir el manual de usuario (PDF)">? <span class="txt">Manual</span></a>
         <button type="button" id="btnTema" onclick="cambiarTema()" title="Cambiar tema">◐ <span class="txt" id="txtTema">Auto</span></button>
         <button type="button" onclick="recargar()" title="Actualizar datos">↻ <span class="txt">Actualizar</span></button>
         <button type="button" onclick="salir()" title="Cerrar sesión en este dispositivo">⎋ <span class="txt">Salir</span></button>
@@ -812,6 +823,7 @@
         <p>Entra con tu cuenta de Google. Solo pueden acceder los miembros de la Junta Directiva.</p>
         <div id="botonGoogle"></div>
         <div id="accesoError"></div>
+        <p><a href="manual.pdf" target="_blank" rel="noopener" style="color: var(--azul)">Manual de usuario (PDF)</a></p>
       </div>
     </div>
 
