@@ -17,9 +17,13 @@
       // Tema: 'auto' (según el dispositivo), 'claro' u 'oscuro'. Se recuerda en este dispositivo.
       (function () {
         let pref = 'auto';
-        try { pref = localStorage.getItem('aespi_tema') || 'auto'; } catch (e) {}
+        try {
+          pref = localStorage.getItem('aespi_tema') || 'auto';
+        } catch (e) {}
         const oscuro = pref === 'oscuro' || (pref === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
-        document.documentElement.dataset.tema = oscuro ? 'oscuro' : 'claro';
+        document.documentElement.dataset.tema = oscuro
+          ? 'oscuro'
+          : 'claro';
       })();
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
@@ -27,10 +31,13 @@
       /* Colores. Tema claro (por defecto) */
       :root {
         color-scheme: light;
-        --verde: #c6e6d0;          /* cabecera, completado, avatar */
+        --verde: #c6e6d0;
+        /* cabecera, completado, avatar */
         --verde-osc: #2e7d4f;
-        --azul: #1f4e9c;           /* títulos y textos destacados */
-        --primario: #1f4e9c;       /* fondo de botones principales */
+        --azul: #1f4e9c;
+        /* títulos y textos destacados */
+        --primario: #1f4e9c;
+        /* fondo de botones principales */
         --sobre-primario: #fff;
         --barra: #9e7f94;
         --pista: #eee;
@@ -38,7 +45,8 @@
         --gris: #6b7280;
         --borde: #dfe3e8;
         --fondo: #f6f8f7;
-        --blanco: #fff;            /* tarjetas, tabla, formularios */
+        --blanco: #fff;
+        /* tarjetas, tabla, formularios */
         --rojo: #c0392b;
         --rojo-suave: #f5e1df;
         --rojo-borde: #f0c4be;
@@ -54,14 +62,22 @@
         --telon: rgba(20, 30, 40, 0.45);
         --aviso-fondo: #1c2430;
         --aviso-texto: #fff;
-        --e0b: #e3ecfa; --e0f: #1f4e9c;
-        --e1b: #fde8d7; --e1f: #9a4a0f;
-        --e2b: #e6f4ea; --e2f: #276a3c;
-        --e3b: #f3e5f5; --e3f: #7b3d8a;
-        --e4b: #fff4c2; --e4f: #7a5a00;
-        --e5b: #e0f4f7; --e5f: #11657a;
-        --e6b: #fbe4e6; --e6f: #a1283a;
-        --e7b: #ececec; --e7f: #444;
+        --e0b: #e3ecfa;
+        --e0f: #1f4e9c;
+        --e1b: #fde8d7;
+        --e1f: #9a4a0f;
+        --e2b: #e6f4ea;
+        --e2f: #276a3c;
+        --e3b: #f3e5f5;
+        --e3f: #7b3d8a;
+        --e4b: #fff4c2;
+        --e4f: #7a5a00;
+        --e5b: #e0f4f7;
+        --e5f: #11657a;
+        --e6b: #fbe4e6;
+        --e6f: #a1283a;
+        --e7b: #ececec;
+        --e7f: #444;
       }
       /* Tema oscuro (lo activa el script del <head> según la preferencia) */
       :root[data-tema="oscuro"] {
@@ -93,14 +109,22 @@
         --telon: rgba(0, 0, 0, 0.6);
         --aviso-fondo: #e4e8ee;
         --aviso-texto: #11151b;
-        --e0b: #1f3150; --e0f: #a9c4f2;
-        --e1b: #43291a; --e1f: #f4b48a;
-        --e2b: #1d3a28; --e2f: #92d6a6;
-        --e3b: #382540; --e3f: #d7a8e3;
-        --e4b: #3d3415; --e4f: #f0d36b;
-        --e5b: #173a42; --e5f: #8fd3e0;
-        --e6b: #43212a; --e6f: #f2a0ad;
-        --e7b: #2e333a; --e7f: #c9ced5;
+        --e0b: #1f3150;
+        --e0f: #a9c4f2;
+        --e1b: #43291a;
+        --e1f: #f4b48a;
+        --e2b: #1d3a28;
+        --e2f: #92d6a6;
+        --e3b: #382540;
+        --e3f: #d7a8e3;
+        --e4b: #3d3415;
+        --e4f: #f0d36b;
+        --e5b: #173a42;
+        --e5f: #8fd3e0;
+        --e6b: #43212a;
+        --e6f: #f2a0ad;
+        --e7b: #2e333a;
+        --e7f: #c9ced5;
       }
       * {
         box-sizing: border-box;
@@ -143,7 +167,7 @@
         z-index: 20;
         padding: 16px;
       }
-      #acceso form {
+      #acceso .caja {
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -170,13 +194,25 @@
         color: var(--gris);
         font-size: 14px;
       }
-      #acceso input {
-        font: inherit;
-        background: var(--blanco);
-        color: var(--texto);
-        padding: 10px 12px;
-        border: 1px solid var(--borde);
-        border-radius: 8px;
+      #botonGoogle {
+        display: flex;
+        justify-content: center;
+        min-height: 44px;
+      }
+      .usuario-cab {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--azul);
+        white-space: nowrap;
+      }
+      .usuario-cab .avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+        background: var(--boton-cab);
       }
       #accesoError {
         color: var(--rojo);
@@ -726,6 +762,7 @@
     <header>
       <h1>Junta Directiva AESPI <span>| Seguidor de tareas</span></h1>
       <div class="acciones-cab">
+        <span class="usuario-cab" id="usuarioCab"></span>
         <button type="button" id="btnTema" onclick="cambiarTema()" title="Cambiar tema">◐ <span class="txt" id="txtTema">Auto</span></button>
         <button type="button" onclick="recargar()" title="Actualizar datos">↻ <span class="txt">Actualizar</span></button>
         <button type="button" onclick="salir()" title="Cerrar sesión en este dispositivo">⎋ <span class="txt">Salir</span></button>
@@ -733,14 +770,13 @@
     </header>
 
     <div id="acceso">
-      <form onsubmit="entrar(event)">
+      <div class="caja">
         <img src="icons/icon-192.png" alt="">
         <h2>Tareas AESPI</h2>
-        <p>Escribe la clave de acceso de la Junta Directiva. Solo se pide una vez en este dispositivo.</p>
-        <input type="password" id="inClave" placeholder="Clave de acceso" autocomplete="current-password" required>
+        <p>Entra con tu cuenta de Google. Solo pueden acceder los miembros de la Junta Directiva.</p>
+        <div id="botonGoogle"></div>
         <div id="accesoError"></div>
-        <button type="submit" class="btn-prim">Entrar</button>
-      </form>
+      </div>
     </div>
 
     <main>
@@ -936,18 +972,26 @@
       // Pega aquí la URL de la implementación de Apps Script (la que termina en /exec)
       const API_URL = 'https://script.google.com/macros/s/AKfycbyIehsQgRVC_U6LStcKAbKPzfK0ftwud52lvAjiBadH9SXMYbb8d3tJHNDScRPUrj2mgQ/exec';
 
-      function leerClave() {
+      // ID de cliente de OAuth de Google (el mismo que en Code.gs)
+      const GOOGLE_CLIENT_ID = '113509342220-e1ggb52f99ckqr48eol26vslsm9roqv4.apps.googleusercontent.com';
+
+      let USUARIO = null; // { nombre, email, foto } de quien ha iniciado sesión
+
+      // La sesión la crea Apps Script al entrar con Google y se guarda en este dispositivo
+      function leerSesion() {
         try {
-          return localStorage.getItem('aespi_clave') || '';
+          return localStorage.getItem('aespi_sesion') || '';
         } catch (e) {
           return '';
         }
       }
-      function guardarClave(c) {
+      function guardarSesion(s) {
         try {
-          c
-            ? localStorage.setItem('aespi_clave', c)
-            : localStorage.removeItem('aespi_clave');
+          s
+            ? localStorage.setItem('aespi_sesion', s)
+            : localStorage.removeItem('aespi_sesion');
+          localStorage.removeItem('aespi_clave'); // restos de la versión con clave
+          localStorage.removeItem('aespi_creador');
         } catch (e) {}
       }
 
@@ -964,7 +1008,7 @@
             },
             body: JSON.stringify(Object.assign({
               accion,
-              clave: leerClave()
+              sesion: leerSesion()
             }, extra || {}))
           });
           res = await r.json();
@@ -972,9 +1016,9 @@
           throw new Error('No se pudo conectar. Comprueba la conexión a internet.');
         }
         if (!res.ok) {
-          if (res.claveIncorrecta) {
-            guardarClave('');
-            mostrarAcceso('La clave no es correcta.');
+          if (res.sinSesion) {
+            guardarSesion('');
+            mostrarAcceso(res.error);
           }
           throw new Error(res.error);
         }
@@ -985,43 +1029,85 @@
         return api(accion, extra)
           .then(d => {
             recibir(d);
-            if (d.aviso)
+            if (d.aviso) 
               aviso(d.aviso, 7000); // p. ej., no se pudo actualizar el calendario
-            else if (mensaje)
+            else if (mensaje) 
               aviso(mensaje);
             }
           )
           .catch(fallo);
       }
 
+      /* ---------- Inicio de sesión con Google ---------- */
+
       function mostrarAcceso(error) {
         $('cargando').style.display = 'none';
-        $('accesoError').textContent = error || '';
         $('acceso').style.display = 'grid';
-        $('inClave').value = '';
-        setTimeout(() => $('inClave').focus(), 50);
+        $('accesoError').textContent = error || (
+          GOOGLE_CLIENT_ID.startsWith('PEGAR')
+          ? 'Falta poner el ID de cliente de Google en index.html (GOOGLE_CLIENT_ID).'
+          : '');
+        iniciarGoogle();
       }
 
-      function entrar(ev) {
-        ev.preventDefault();
-        guardarClave($('inClave').value.trim());
+      // Pinta el botón "Iniciar sesión con Google". Se llama al cargar la librería de Google y al mostrar el acceso.
+      let googleListo = false;
+      function iniciarGoogle() {
+        if (!window.google || !google.accounts || GOOGLE_CLIENT_ID.startsWith('PEGAR')) 
+          return;
+        if (!googleListo) {
+          google
+            .accounts
+            .id
+            .initialize({client_id: GOOGLE_CLIENT_ID, callback: alEntrarConGoogle, cancel_on_tap_outside: true});
+          googleListo = true;
+        }
+        if ($('acceso').style.display === 'grid') {
+          google
+            .accounts
+            .id
+            .renderButton($('botonGoogle'), {
+              theme: document.documentElement.dataset.tema === 'oscuro'
+                ? 'filled_black'
+                : 'outline',
+              size: 'large',
+              text: 'signin_with',
+              shape: 'pill',
+              locale: 'es'
+            });
+        }
+      }
+
+      // Google devuelve una credencial firmada; Apps Script la verifica y abre una sesión
+      function alEntrarConGoogle(respuesta) {
         $('accesoError').textContent = 'Comprobando…';
-        api('datos')
+        api('login', {credencial: respuesta.credential})
           .then(d => {
+            guardarSesion(d.sesion);
             $('acceso').style.display = 'none';
             recibir(d);
+            aviso('Hola, ' + (
+              d.usuario
+              ? d.usuario.nombre
+              : ''));
           })
           .catch(e => {
-            if ($('acceso').style.display !== 'none') 
-              $('accesoError').textContent = e.message;
-            }
-          );
+            $('accesoError').textContent = e.message;
+          });
       }
 
       function salir() {
-        if (!confirm('¿Cerrar sesión en este dispositivo? Tendrás que volver a escribir la clave.')) 
+        if (!confirm('¿Cerrar sesión en este dispositivo?')) 
           return;
-        guardarClave('');
+        api('salir').catch(() => {}); // borra la sesión en el servidor
+        guardarSesion('');
+        if (window.google && google.accounts) 
+          google
+            .accounts
+            .id
+            .disableAutoSelect();
+        USUARIO = null;
+        pintarUsuario();
         DATOS = {
           tareas: [],
           miembros: []
@@ -1030,19 +1116,32 @@
         mostrarAcceso();
       }
 
+      function pintarUsuario() {
+        $('usuarioCab').innerHTML = USUARIO
+          ? `${avatar(USUARIO.nombre)}<span class="txt">${esc(USUARIO.nombre)}</span>`
+          : '';
+        $('usuarioCab').title = USUARIO
+          ? 'Sesión iniciada: ' + USUARIO.email
+          : '';
+      }
+
       function recargar() {
         $('cargando').style.display = 'grid';
         cargar();
       }
 
       function cargar() {
-        if (!leerClave()) 
+        if (!leerSesion()) 
           return mostrarAcceso();
         llamar('datos');
       }
 
       function recibir(d) {
         DATOS = d;
+        if (d.usuario) {
+          USUARIO = d.usuario;
+          pintarUsuario();
+        }
         $('cargando').style.display = 'none';
         const nombres = [...new Set(DATOS.miembros.map(m => m.nombre).concat(DATOS.tareas.map(t => t.responsable)).filter(Boolean))];
         const fr = $('fResp'),
@@ -1230,94 +1329,209 @@
        * Automático: abiertas primero y, dentro de cada grupo, por fin previsto.
        * Al pulsar una columna: ascendente → descendente → automático. Las vacías van siempre al final.
        */
-      const ORDEN_ESTADO = { 'Pendiente': 0, 'En curso': 1, 'Completado': 2, 'Cancelada': 3 };
-      const ORDEN_PLAZO = { 'Retrasada': 0, 'Fuera de plazo': 1, 'Dentro de plazo': 2 };
-      const NOMBRE_COL = { tarea: 'Tarea', responsable: 'Responsable', estado: 'Estado', inicio: 'Inicio', fin: 'Fin previsto',
-        progreso: '% completado', realizacion: 'Realización', plazo: 'Plazo', coste: 'Coste', valoracion: 'Valoración' };
+      const ORDEN_ESTADO = {
+        'Pendiente': 0,
+        'En curso': 1,
+        'Completado': 2,
+        'Cancelada': 3
+      };
+      const ORDEN_PLAZO = {
+        'Retrasada': 0,
+        'Fuera de plazo': 1,
+        'Dentro de plazo': 2
+      };
+      const NOMBRE_COL = {
+        tarea: 'Tarea',
+        responsable: 'Responsable',
+        estado: 'Estado',
+        inicio: 'Inicio',
+        fin: 'Fin previsto',
+        progreso: '% completado',
+        realizacion: 'Realización',
+        plazo: 'Plazo',
+        coste: 'Coste',
+        valoracion: 'Valoración'
+      };
 
-      let ORDEN = { col: '', dir: 1 };
-      try { ORDEN = JSON.parse(localStorage.getItem('aespi_orden')) || ORDEN; } catch (e) {}
+      let ORDEN = {
+        col: '',
+        dir: 1
+      };
+      try {
+        ORDEN = JSON.parse(localStorage.getItem('aespi_orden')) || ORDEN;
+      } catch (e) {}
 
       function ordenAuto(a, b) {
-        const ca = ['Completado', 'Cancelada'].includes(a.estado), cb = ['Completado', 'Cancelada'].includes(b.estado);
-        if (ca !== cb) return ca ? 1 : -1;
+        const ca = ['Completado', 'Cancelada'].includes(a.estado),
+          cb = ['Completado', 'Cancelada'].includes(b.estado);
+        if (ca !== cb) 
+          return ca
+            ? 1
+            : -1;
         return String(a.fin || '9999').localeCompare(String(b.fin || '9999'));
       }
 
       function costeTotal(t) {
         const hijas = hijasDe(t.id);
-        if (!hijas.length) return t.coste;
+        if (!hijas.length) 
+          return t.coste;
         return (Number(t.coste) || 0) + hijas.reduce((s, h) => s + (Number(h.coste) || 0), 0);
       }
 
       function valorOrden(t, col) {
         switch (col) {
-          case 'estado': return ORDEN_ESTADO[t.estado] ?? 9;
-          case 'progreso': return progreso(t);
-          case 'plazo': return plazo(t) ? ORDEN_PLAZO[plazo(t)] : '';
-          case 'coste': { const c = costeTotal(t); return c === '' || c == null ? '' : Number(c); }
-          case 'valoracion': return t.valoracion ? Number(t.valoracion) : '';
-          default: return t[col] ?? '';
+          case 'estado':
+            return ORDEN_ESTADO[t.estado] ?? 9;
+          case 'progreso':
+            return progreso(t);
+          case 'plazo':
+            return plazo(t)
+              ? ORDEN_PLAZO[plazo(t)]
+              : '';
+          case 'coste':
+            {
+              const c = costeTotal(t);
+              return c === '' || c == null
+                ? ''
+                : Number(c);
+            }
+          case 'valoracion':
+            return t.valoracion
+              ? Number(t.valoracion)
+              : '';
+          default:
+            return t[col] ?? '';
         }
       }
 
       function comparar(a, b) {
-        if (!ORDEN.col) return ordenAuto(a, b);
-        const va = valorOrden(a, ORDEN.col), vb = valorOrden(b, ORDEN.col);
-        const vaVacio = va === '', vbVacio = vb === '';
-        if (vaVacio || vbVacio) return vaVacio && vbVacio ? ordenAuto(a, b) : (vaVacio ? 1 : -1);
+        if (!ORDEN.col) 
+          return ordenAuto(a, b);
+        const va = valorOrden(a, ORDEN.col),
+          vb = valorOrden(b, ORDEN.col);
+        const vaVacio = va === '',
+          vbVacio = vb === '';
+        if (vaVacio || vbVacio) 
+          return vaVacio && vbVacio
+            ? ordenAuto(a, b)
+            : (
+              vaVacio
+              ? 1
+              : -1);
         const c = typeof va === 'number' && typeof vb === 'number'
           ? va - vb
-          : String(va).localeCompare(String(vb), 'es', { sensitivity: 'base', numeric: true });
+          : String(va).localeCompare(String(vb), 'es', {
+            sensitivity: 'base',
+            numeric: true
+          });
         return c * ORDEN.dir || ordenAuto(a, b);
       }
 
       function ordenarPor(col) {
-        if (ORDEN.col !== col) ORDEN = { col, dir: 1 };
-        else if (ORDEN.dir === 1) ORDEN = { col, dir: -1 };
-        else ORDEN = { col: '', dir: 1 };
+        if (ORDEN.col !== col) 
+          ORDEN = {
+            col,
+            dir: 1
+          };
+        else if (ORDEN.dir === 1) 
+          ORDEN = {
+            col,
+            dir: -1
+          };
+        else 
+          ORDEN = {
+            col: '',
+            dir: 1
+          };
         guardarOrden();
       }
 
       function guardarOrden() {
-        try { localStorage.setItem('aespi_orden', JSON.stringify(ORDEN)); } catch (e) {}
+        try {
+          localStorage.setItem('aespi_orden', JSON.stringify(ORDEN));
+        } catch (e) {}
         marcarOrden();
         pintar();
       }
 
       // Flechas en los títulos de columna y valor del desplegable (móvil)
       function marcarOrden() {
-        document.querySelectorAll('th[data-col]').forEach(th => {
-          const activa = th.dataset.col === ORDEN.col;
-          th.classList.toggle('ordenada', activa);
-          th.dataset.flecha = activa ? (ORDEN.dir === 1 ? '▲' : '▼') : '';
-          th.title = activa
-            ? (ORDEN.dir === 1 ? 'Pulsa para orden descendente' : 'Pulsa para volver al orden automático')
-            : 'Ordenar por ' + NOMBRE_COL[th.dataset.col];
-          th.setAttribute('aria-sort', activa ? (ORDEN.dir === 1 ? 'ascending' : 'descending') : 'none');
-        });
-        $('fOrden').value = ORDEN.col ? ORDEN.col + ':' + ORDEN.dir : '';
+        document
+          .querySelectorAll('th[data-col]')
+          .forEach(th => {
+            const activa = th.dataset.col === ORDEN.col;
+            th
+              .classList
+              .toggle('ordenada', activa);
+            th.dataset.flecha = activa
+              ? (
+                ORDEN.dir === 1
+                ? '▲'
+                : '▼')
+              : '';
+            th.title = activa
+              ? (
+                ORDEN.dir === 1
+                ? 'Pulsa para orden descendente'
+                : 'Pulsa para volver al orden automático')
+              : 'Ordenar por ' + NOMBRE_COL[th.dataset.col];
+            th.setAttribute(
+              'aria-sort', activa
+              ? (
+                ORDEN.dir === 1
+                ? 'ascending'
+                : 'descending')
+              : 'none');
+          });
+        $('fOrden').value = ORDEN.col
+          ? ORDEN.col + ':' + ORDEN.dir
+          : '';
       }
 
-      document.querySelectorAll('th[data-col]').forEach(th => th.addEventListener('click', () => ordenarPor(th.dataset.col)));
-      $('fOrden').innerHTML = '<option value="">Orden: automático</option>' + Object.entries(NOMBRE_COL)
-        .map(([c, n]) => `<option value="${c}:1">${n} ▲</option><option value="${c}:-1">${n} ▼</option>`).join('');
+      document
+        .querySelectorAll('th[data-col]')
+        .forEach(th => th.addEventListener('click', () => ordenarPor(th.dataset.col)));
+      $('fOrden').innerHTML = '<option value="">Orden: automático</option>' + Object
+        .entries(NOMBRE_COL)
+        .map(([c, n]) => `<option value="${c}:1">${n} ▲</option><option value="${c}:-1">${n} ▼</option>`)
+        .join('');
       $('fOrden').addEventListener('change', e => {
-        const [col, dir] = e.target.value.split(':');
-        ORDEN = col ? { col, dir: Number(dir) } : { col: '', dir: 1 };
+        const [col, dir] = e
+          .target
+          .value
+          .split(':');
+        ORDEN = col
+          ? {
+            col,
+            dir: Number(dir)
+          }
+          : {
+            col: '',
+            dir: 1
+          };
         guardarOrden();
       });
       marcarOrden();
 
       // Participantes distintos del responsable, para mostrarlos debajo de su nombre
       function normalizar(s) {
-        return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+        return String(s || '')
+          .normalize('NFD')
+          .replace(/[̀-ͯ]/g, '')
+          .trim()
+          .toLowerCase();
       }
       function otrosParticipantes(t) {
         const resp = normalizar(t.responsable);
-        const otros = String(t.participantes || '').split(',').map(x => x.trim())
+        const otros = String(t.participantes || '')
+          .split(',')
+          .map(x => x.trim())
           .filter(x => x && normalizar(x) !== resp);
-        return otros.length ? `<div class="participantes" title="Participantes">con ${otros.map(esc).join(', ')}</div>` : '';
+        return otros.length
+          ? `<div class="participantes" title="Participantes">con ${otros
+            .map(esc)
+            .join(', ')}</div>`
+          : '';
       }
 
       const PLEGADAS = new Set();
@@ -1432,28 +1646,34 @@
           ? 'Tiene subtareas, así que es una tarea de nivel 1. Su % se calcula con el de sus subtareas.'
           : '';
 
-        // "Creado por": miembros con correo. Solo se elige al crear la tarea; después no se puede cambiar.
-        const conCorreo = DATOS.miembros.filter(m => m.email);
+        // "Creado por": en una tarea nueva es quien ha iniciado sesión. Después no se puede cambiar.
+        // Solo las tareas antiguas sin creador permiten elegirlo a mano.
+        const conCorreo = DATOS
+          .miembros
+          .filter(m => m.email);
         let opciones = conCorreo.map(m => `<option value="${esc(m.email.toLowerCase())}">${esc(m.nombre)} — ${esc(m.email)}</option>`);
-        if (id && t.creadoPor && !conCorreo.some(m => m.email.toLowerCase() === String(t.creadoPor).toLowerCase()))
+        if (id && t.creadoPor && !conCorreo.some(m => m.email.toLowerCase() === String(t.creadoPor).toLowerCase())) 
           opciones.push(`<option value="${esc(t.creadoPor)}">${esc(t.creadoPor)}</option>`); // ya no está en Miembros
-        const fijado = !!(id && t.creadoPor); // ya tiene creador: no se puede cambiar
-        $('selCreador').innerHTML = `<option value="">${id ? '— (no consta)' : '— Elige quién crea la tarea —'}</option>` + opciones.join('');
+        const fijado = !id || !!t.creadoPor;
+        $('selCreador').innerHTML = `<option value="">— (no consta)</option>` + opciones.join('');
         $('selCreador').disabled = fijado;
-        $('selCreador').required = !id;
-        $('ayudaCreador').textContent = fijado
-          ? 'No se puede cambiar una vez indicado.'
-          : id
-            ? 'Esta tarea no tiene creador: puedes indicarlo ahora (después no se podrá cambiar).'
-            : (conCorreo.length ? '' : 'Añade el correo de cada miembro en la columna Email de la pestaña Miembros.');
+        $('ayudaCreador').textContent = !id
+          ? 'Se rellena con tu usuario.'
+          : fijado
+            ? 'No se puede cambiar una vez indicado.'
+            : 'Esta tarea no tiene creador: puedes indicarlo ahora (después no se podrá cambiar).';
 
         frm.reset();
-        for (const el of frm.elements)
-          if (el.name)
+        for (const el of frm.elements) 
+          if (el.name) 
             el.value = t[el.name] ?? '';
-        if (id) $('selCreador').value = String(t.creadoPor || '').toLowerCase();
-        else $('selCreador').value = leerCreador(); // el último elegido en este dispositivo
-      ABIERTA = t;
+      $('selCreador').value = id
+          ? String(t.creadoPor || '').toLowerCase()
+          : (
+            USUARIO
+            ? USUARIO.email
+            : '');
+        ABIERTA = t;
         mostrarProgreso();
         pintarSugerencias();
         $('dlgTitulo').textContent = id
@@ -1469,10 +1689,6 @@
       }
       function cerrar() {
         $('dlg').close();
-      }
-
-      function leerCreador() {
-        try { return localStorage.getItem('aespi_creador') || ''; } catch (e) { return ''; }
       }
 
       let ABIERTA = null; // tarea abierta en el formulario
@@ -1504,10 +1720,8 @@
       function guardar(ev) {
         ev.preventDefault();
         const t = Object.fromEntries(new FormData(frm));
-        if ($('selPadre').disabled)
+        if ($('selPadre').disabled) 
           t.padre = ''; // un select desactivado no se envía
-        if (!t.id && t.creadoPor)
-          try { localStorage.setItem('aespi_creador', t.creadoPor); } catch (e) {}
         cerrar();
         $('cargando').style.display = 'grid';
         llamar('guardar', {
@@ -1536,43 +1750,66 @@
 
       // Al volver a la app después de un rato, se actualizan los datos
       document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && leerClave()) 
+        if (!document.hidden && leerSesion()) 
           cargar();
         }
       );
 
       /* ---------- Tema claro / oscuro ---------- */
-const TEMAS = ['auto', 'claro', 'oscuro'];
-const NOMBRE_TEMA = { auto: 'Auto', claro: 'Claro', oscuro: 'Oscuro' };
-const prefOscuro = matchMedia('(prefers-color-scheme: dark)');
+      const TEMAS = ['auto', 'claro', 'oscuro'];
+      const NOMBRE_TEMA = {
+        auto: 'Auto',
+        claro: 'Claro',
+        oscuro: 'Oscuro'
+      };
+      const prefOscuro = matchMedia('(prefers-color-scheme: dark)');
 
-function leerTema() { try { return localStorage.getItem('aespi_tema') || 'auto'; } catch (e) { return 'auto'; } }
+      function leerTema() {
+        try {
+          return localStorage.getItem('aespi_tema') || 'auto';
+        } catch (e) {
+          return 'auto';
+        }
+      }
 
-function aplicarTema() {
-  const pref = leerTema();
-  const oscuro = pref === 'oscuro' || (pref === 'auto' && prefOscuro.matches);
-  document.documentElement.dataset.tema = oscuro ? 'oscuro' : 'claro';
-  document.querySelector('meta[name=theme-color]').content = oscuro ? '#11151b' : '#1f4e9c';
-  $('txtTema').textContent = NOMBRE_TEMA[pref];
-  $('btnTema').title = 'Tema: ' + NOMBRE_TEMA[pref] + ' (pulsa para cambiar)';
-}
+      function aplicarTema() {
+        const pref = leerTema();
+        const oscuro = pref === 'oscuro' || (pref === 'auto' && prefOscuro.matches);
+        document.documentElement.dataset.tema = oscuro
+          ? 'oscuro'
+          : 'claro';
+        document
+          .querySelector('meta[name=theme-color]')
+          .content = oscuro
+            ? '#11151b'
+            : '#1f4e9c';
+        $('txtTema').textContent = NOMBRE_TEMA[pref];
+        $('btnTema').title = 'Tema: ' + NOMBRE_TEMA[pref] + ' (pulsa para cambiar)';
+      }
 
-function cambiarTema() {
-  const sig = TEMAS[(TEMAS.indexOf(leerTema()) + 1) % TEMAS.length];
-  try { localStorage.setItem('aespi_tema', sig); } catch (e) {}
-  aplicarTema();
-  aviso('Tema: ' + NOMBRE_TEMA[sig] + (sig === 'auto' ? ' (según el dispositivo)' : ''));
-}
+      function cambiarTema() {
+        const sig = TEMAS[(TEMAS.indexOf(leerTema()) + 1) % TEMAS.length];
+        try {
+          localStorage.setItem('aespi_tema', sig);
+        } catch (e) {}
+        aplicarTema();
+        aviso('Tema: ' + NOMBRE_TEMA[sig] + (
+          sig === 'auto'
+          ? ' (según el dispositivo)'
+          : ''));
+      }
 
-prefOscuro.addEventListener('change', aplicarTema); // si el dispositivo cambia de modo, la app le sigue
-aplicarTema();
+      prefOscuro.addEventListener('change', aplicarTema); // si el dispositivo cambia de modo, la app le sigue
+      aplicarTema();
 
-// Necesario para que la app se pueda instalar
+      // Necesario para que la app se pueda instalar
       if ('serviceWorker' in navigator) 
         navigator
           .serviceWorker
           .register('sw.js')
           .catch(() => {});
     </script>
+    <!-- Librería de Google para el botón "Iniciar sesión con Google" -->
+    <script src="https://accounts.google.com/gsi/client" async defer onload="iniciarGoogle()"></script>
   </body>
 </html>
