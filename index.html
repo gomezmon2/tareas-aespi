@@ -248,6 +248,19 @@
         border-radius: 10px;
         padding: 10px 16px;
         min-width: 120px;
+        text-align: left;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+      }
+      .kpi:hover {
+        border-color: var(--azul);
+      }
+      .kpi.activa {
+        border: 2px solid var(--azul);
+        padding: 9px 15px;
+        background: var(--azul-suave);
       }
       .kpi b {
         display: block;
@@ -795,6 +808,7 @@
           <option>Completado</option>
           <option>Cancelada</option>
           <option value="retrasadas">Retrasadas</option>
+          <option value="coste">Con coste</option>
         </select>
         <select id="fEtiqueta">
           <option value="">Todas las etiquetas</option>
@@ -1245,19 +1259,17 @@
         const abiertas = ts.filter(t => !['Completado', 'Cancelada'].includes(t.estado));
         const retr = ts.filter(t => plazo(t) === 'Retrasada');
         const coste = ts.reduce((s, t) => s + (Number(t.coste) || 0), 0);
-        $('resumen').innerHTML = `
-    <div class="kpi"><b>${ts
-          .length}</b><small>Tareas</small></div>
-    <div class="kpi"><b>${abiertas
-          .length}</b><small>Abiertas</small></div>
-    <div class="kpi"><b>${ts
-          .filter(t => t.estado === 'Completado')
-          .length}</b><small>Completadas</small></div>
-    <div class="kpi ${retr
-          .length
-            ? 'alerta'
-            : ''}"><b>${retr.length}</b><small>Retrasadas</small></div>
-    <div class="kpi"><b>${euros(coste) || '0 €'}</b><small>Coste total</small></div>`;
+        // Totales: cada recuadro es también un filtro (usa el desplegable de estado)
+        const kpi = (filtro, valor, texto, extra) =>
+          `<button type="button" class="kpi ${extra || ''} ${e === filtro ? 'activa' : ''}" data-filtro="${filtro}"
+             aria-pressed="${e === filtro}" title="${filtro ? 'Mostrar solo: ' + texto.toLowerCase() : 'Mostrar todas'}">
+             <b>${valor}</b><small>${texto}</small></button>`;
+        $('resumen').innerHTML =
+          kpi('', ts.length, 'Tareas') +
+          kpi('abiertas', abiertas.length, 'Abiertas') +
+          kpi('Completado', ts.filter(t => t.estado === 'Completado').length, 'Completadas') +
+          kpi('retrasadas', retr.length, 'Retrasadas', retr.length ? 'alerta' : '') +
+          kpi('coste', euros(coste) || '0 €', 'Coste total');
 
         const cumple = t => {
           if (r && t.responsable !== r) 
@@ -1266,7 +1278,9 @@
             return false;
           if (e === 'retrasadas' && plazo(t) !== 'Retrasada') 
             return false;
-          if (e && !['abiertas', 'retrasadas'].includes(e) && t.estado !== e) 
+          if (e === 'coste' && !(Number(t.coste) > 0))
+            return false;
+          if (e && !['abiertas', 'retrasadas', 'coste'].includes(e) && t.estado !== e)
             return false;
           if (fe && !etiquetasVisibles(t).some(x => x.toLowerCase() === fe)) 
             return false;
@@ -1533,6 +1547,15 @@
             .join(', ')}</div>`
           : '';
       }
+
+      // Pulsar un recuadro de totales filtra la lista; pulsarlo otra vez quita el filtro
+      $('resumen').addEventListener('click', ev => {
+        const b = ev.target.closest('.kpi');
+        if (!b) return;
+        const f = b.dataset.filtro;
+        $('fEstado').value = $('fEstado').value === f ? '' : f;
+        pintar();
+      });
 
       const PLEGADAS = new Set();
       function hijasDe(id) {
