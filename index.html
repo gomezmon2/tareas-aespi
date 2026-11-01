@@ -366,6 +366,29 @@
         color: var(--azul);
         min-width: 220px;
       }
+      .adjunto {
+        margin-left: 6px;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .con-boton {
+        display: flex;
+        gap: 8px;
+      }
+      .boton-enlace {
+        flex: none;
+        align-self: center;
+        padding: 8px 12px;
+        border: 1px solid var(--borde);
+        border-radius: 8px;
+        color: var(--azul);
+        text-decoration: none;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .boton-enlace[hidden] {
+        display: none;
+      }
       .t-sub {
         font-size: 12.5px;
         color: var(--gris);
@@ -912,8 +935,16 @@
         <div class="campo c4">
           <label>Participantes</label><input name="participantes" placeholder="Nombres separados por comas"></div>
         <div class="campo c4">
-          <label>Notas / Acta</label>
-          <textarea name="notas" placeholder="Ej.: Acta 29/06/2026"></textarea>
+          <label>Notas</label>
+          <textarea name="notas"></textarea>
+        </div>
+        <div class="campo c4">
+          <label>Documento adjunto (URL)</label>
+          <div class="con-boton">
+            <input type="url" name="adjunto" id="inAdjunto" placeholder="https://drive.google.com/…" oninput="pintarAbrirAdjunto()">
+            <a id="abrirAdjunto" class="boton-enlace" target="_blank" rel="noopener" title="Abrir el documento">Abrir ↗</a>
+          </div>
+          <span class="ayuda">Pega el enlace a un documento de Drive o de cualquier web. Comprueba que las personas de la Junta tengan permiso para verlo.</span>
         </div>
 
         <div class="dlg-pie">
@@ -1589,11 +1620,16 @@
           .join(' · ');
         const id = esc(t.id);
         const lasEtq = etiquetasVisibles(t);
-        const etqs = lasEtq.length
+        // 📎 enlace al documento adjunto (se abre en otra pestaña sin abrir el formulario)
+        const clip = /^https?:\/\//i.test(t.adjunto || '')
+          ? `<a class="adjunto" href="${esc(t.adjunto)}" target="_blank" rel="noopener" title="Abrir documento adjunto"
+               onclick="event.stopPropagation()">📎</a>`
+          : '';
+        const etqs = clip + (lasEtq.length
           ? `<span class="etqs">${lasEtq
             .map(chip)
             .join('')}</span>`
-          : '';
+          : '');
         let nombre;
         if (esHija) {
           nombre = esc(t.tarea) + etqs;
@@ -1699,6 +1735,7 @@
         ABIERTA = t;
         mostrarProgreso();
         pintarSugerencias();
+        pintarAbrirAdjunto();
         $('dlgTitulo').textContent = id
           ? 'Editar tarea'
           : (
@@ -1712,6 +1749,14 @@
       }
       function cerrar() {
         $('dlg').close();
+      }
+
+      // Botón "Abrir ↗" junto al campo del adjunto: solo aparece si hay una dirección válida
+      function pintarAbrirAdjunto() {
+        const url = $('inAdjunto').value.trim();
+        const valida = /^https?:\/\/\S+$/i.test(url);
+        $('abrirAdjunto').hidden = !valida;
+        if (valida) $('abrirAdjunto').href = url;
       }
 
       let ABIERTA = null; // tarea abierta en el formulario

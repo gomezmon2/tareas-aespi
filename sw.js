@@ -1,7 +1,7 @@
 // Service worker de Tareas AESPI.
 // Guarda la página y los iconos para que la app abra rápido; los datos siempre se piden a Apps Script.
 // Si cambias index.html, sube también este archivo cambiando el número de versión.
-const VERSION = 'tareas-aespi-v12';
+const VERSION = 'tareas-aespi-v13';
 const ARCHIVOS = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/favicon.png'];
 
 self.addEventListener('install', e => {
