@@ -376,6 +376,15 @@
         color: var(--azul);
         min-width: 220px;
       }
+      .enviada {
+        margin-left: 6px;
+        font-size: 13px;
+        color: var(--verde-osc);
+        cursor: help;
+      }
+      .ultimo-envio {
+        align-self: center;
+      }
       .adjunto {
         margin-left: 6px;
         text-decoration: none;
@@ -776,6 +785,7 @@
       .dlg-pie {
         grid-column: 1 / -1;
         display: flex;
+        flex-wrap: wrap;
         gap: 10px;
         justify-content: flex-end;
         margin-top: 6px;
@@ -1017,6 +1027,8 @@
 
         <div class="dlg-pie">
           <button type="button" class="btn-peligro" id="btnBorrar" onclick="borrar()">Eliminar</button>
+          <span class="ayuda ultimo-envio" id="ultimoEnvio"></span>
+          <button type="button" id="btnCorreo" onclick="enviarCorreo()" title="Enviar los datos de la tarea al creador, responsable y participantes">✉ Enviar por correo</button>
           <button type="button" onclick="cerrar()">Cancelar</button>
           <button type="submit" class="btn-prim">Guardar</button>
         </div>
@@ -1779,7 +1791,11 @@
           ? `<a class="adjunto" href="${esc(t.adjunto)}" target="_blank" rel="noopener" title="Abrir documento adjunto"
                onclick="event.stopPropagation()">📎</a>`
           : '';
-        const etqs = clip + (lasEtq.length
+        // ✉ si la tarea se ha enviado por correo (al pasar el ratón: cuándo y quién)
+        const sobre = t.correo
+          ? `<span class="enviada" title="Enviada por correo: ${esc(t.correo)}">✉</span>`
+          : '';
+        const etqs = clip + sobre + (lasEtq.length
           ? `<span class="etqs">${lasEtq
             .map(chip)
             .join('')}</span>`
@@ -1899,6 +1915,9 @@
         $('btnBorrar').style.display = id
           ? ''
           : 'none';
+        $('btnCorreo').style.display = id ? '' : 'none';
+        $('ultimoEnvio').textContent = id && t.correo ? 'Último envío: ' + t.correo : '';
+        FORM_INICIAL = JSON.stringify(Object.fromEntries(new FormData(frm)));
         $('dlg').showModal();
       }
       function cerrar() {
@@ -1911,6 +1930,57 @@
         const valida = /^https?:\/\/\S+$/i.test(url);
         $('abrirAdjunto').hidden = !valida;
         if (valida) $('abrirAdjunto').href = url;
+      }
+
+      /* ---------- Enviar la tarea por correo ---------- */
+      let FORM_INICIAL = ''; // para saber si hay cambios sin guardar
+
+      // Mismo criterio que Code.gs: creador + responsable + participantes, buscados por nombre en Miembros
+      function destinatarios(t) {
+        const lista = [], sinCorreo = [];
+        const agregar = (nombre, email) => {
+          email = String(email || '').trim().toLowerCase();
+          if (email && !lista.some(x => x.email === email)) lista.push({ nombre, email });
+        };
+        const porNombre = n => {
+          n = String(n || '').trim();
+          if (!n) return;
+          if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(n)) return agregar(n, n);
+          const m = DATOS.miembros.find(x => normalizar(x.nombre) === normalizar(n));
+          if (m && m.email) agregar(m.nombre, m.email);
+          else if (!sinCorreo.includes(n)) sinCorreo.push(n);
+        };
+        if (t.creadoPor) {
+          const m = DATOS.miembros.find(x => String(x.email).toLowerCase() === String(t.creadoPor).toLowerCase());
+          agregar(m ? m.nombre : t.creadoPor, t.creadoPor);
+        }
+        porNombre(t.responsable);
+        String(t.participantes || '').split(',').forEach(porNombre);
+        return { lista, sinCorreo };
+      }
+
+      function enviarCorreo() {
+        const actual = Object.fromEntries(new FormData(frm));
+        if ($('selPadre').disabled) actual.padre = '';
+        actual.creadoPor = $('selCreador').value;
+        const cambios = JSON.stringify(Object.fromEntries(new FormData(frm))) !== FORM_INICIAL;
+        const d = destinatarios(actual);
+        if (!d.lista.length)
+          return aviso('Ninguna persona de la tarea tiene correo en la lista de Miembros.', 5000);
+        let msg = 'Se enviará un correo con los datos de la tarea a:\n' +
+          d.lista.map(x => '  • ' + x.nombre + (x.nombre !== x.email ? ' (' + x.email + ')' : '')).join('\n');
+        if (d.sinCorreo.length) msg += '\n\nSin correo en Miembros (no lo recibirán): ' + d.sinCorreo.join(', ');
+        if (cambios) msg += '\n\nAntes se guardarán los cambios del formulario.';
+        if (!confirm(msg)) return;
+        if (cambios && !frm.reportValidity()) return;
+
+        const id = actual.id;
+        cerrar();
+        $('cargando').style.display = 'grid';
+        (cambios ? api('guardar', { tarea: actual }) : Promise.resolve())
+          .then(() => api('correo', { id }))
+          .then(r => { recibir(r); aviso(r.aviso || 'Correo enviado', 7000); })
+          .catch(fallo);
       }
 
       let ABIERTA = null; // tarea abierta en el formulario
