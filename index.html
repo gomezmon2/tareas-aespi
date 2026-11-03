@@ -619,6 +619,61 @@
         border: 1px solid transparent;
         opacity: 0.55;
       }
+      .cuerpo-etq {
+        padding: 16px 20px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      #listaEtq {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 55vh;
+        overflow-y: auto;
+      }
+      .fila-etq {
+        display: grid;
+        grid-template-columns: 130px 1fr 120px 70px auto auto;
+        gap: 8px;
+        align-items: center;
+      }
+      .fila-etq.nueva {
+        grid-template-columns: 1fr 120px auto;
+        border-top: 1px solid var(--borde);
+        padding-top: 12px;
+      }
+      .fila-etq input,
+      .fila-etq select {
+        font: inherit;
+        padding: 7px 9px;
+        border: 1px solid var(--borde);
+        border-radius: 8px;
+        background: var(--blanco);
+        color: var(--texto);
+        min-width: 0;
+      }
+      .fila-etq button {
+        padding: 7px 10px;
+      }
+      .fila-etq .muestra {
+        justify-self: start;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .fila-etq .usos {
+        font-size: 12px;
+        color: var(--gris);
+      }
+      @media (max-width: 600px) {
+        .fila-etq {
+          grid-template-columns: 1fr 1fr;
+        }
+        .fila-etq .muestra {
+          grid-column: 1 / -1;
+        }
+      }
       .sugerencias .etq.activa {
         opacity: 1;
         border-color: currentColor;
@@ -848,6 +903,7 @@
         <select id="fEtiqueta">
           <option value="">Todas las etiquetas</option>
         </select>
+        <button type="button" onclick="abrirEtiquetas()" title="Crear, renombrar, cambiar el color o eliminar etiquetas">🏷 Etiquetas</button>
         <select id="fOrden" class="solo-movil" aria-label="Ordenar por"></select>
         <button class="btn-prim" onclick="abrir()">+ Nueva tarea</button>
       </div>
@@ -965,6 +1021,24 @@
           <button type="submit" class="btn-prim">Guardar</button>
         </div>
       </form>
+    </dialog>
+
+    <dialog id="dlgEtq">
+      <div class="dlg-cab">
+        <h2>Etiquetas</h2>
+        <button type="button" onclick="$('dlgEtq').close()" aria-label="Cerrar">×</button>
+      </div>
+      <div class="cuerpo-etq">
+        <p class="ayuda">Al cambiar el nombre de una etiqueta, o eliminarla, se cambia en todas las tareas que la usan.
+          También se pueden editar en la pestaña «Etiquetas» de la hoja.</p>
+        <div id="listaEtq"></div>
+        <div class="fila-etq nueva">
+          <input id="nuevaEtq" placeholder="Nueva etiqueta" aria-label="Nombre de la nueva etiqueta"
+            onkeydown="if (event.key === 'Enter') crearEtq()">
+          <select id="colorNuevaEtq" aria-label="Color"></select>
+          <button type="button" class="btn-prim" onclick="crearEtq()">+ Añadir</button>
+        </div>
+      </div>
     </dialog>
 
     <div id="cargando">Guardando…</div>
@@ -1233,23 +1307,91 @@
           return propias;
         return etiquetasDe(DATOS.tareas.find(x => x.id === t.padre) || {});
       }
+      // Lista de etiquetas: la de la pestaña "Etiquetas" más cualquier otra que use alguna tarea
       function todasEtiquetas() {
         const mapa = new Map();
+        (DATOS.etiquetas || []).forEach(e => mapa.set(e.nombre.toLowerCase(), e.nombre));
         DATOS
           .tareas
           .forEach(t => etiquetasDe(t).forEach(e => {
-            if (!mapa.has(e.toLowerCase())) 
+            if (!mapa.has(e.toLowerCase()))
               mapa.set(e.toLowerCase(), e);
             }
           ));
         return [...mapa.values()].sort((a, b) => a.localeCompare(b, 'es'));
       }
-      // Cada etiqueta tiene siempre el mismo color, calculado a partir de su nombre
-      function colorEtq(e) {
+      // Colores (mismo orden que en Code.gs y que los estilos .etq-0 … .etq-7)
+      const COLORES_ETQ = ['azul', 'naranja', 'verde', 'morado', 'amarillo', 'turquesa', 'rojo', 'gris'];
+      function colorPorDefecto(e) {
         let h = 0;
-        for (const c of e.toLowerCase()) 
+        for (const c of e.toLowerCase())
           h = (h * 31 + c.charCodeAt(0)) >>> 0;
         return h % 8;
+      }
+      // El color elegido en la lista de etiquetas; si no tiene, uno fijo calculado a partir del nombre
+      function colorEtq(e) {
+        const x = (DATOS.etiquetas || []).find(y => y.nombre.toLowerCase() === String(e).toLowerCase());
+        const i = x ? COLORES_ETQ.indexOf(x.color) : -1;
+        return i >= 0 ? i : colorPorDefecto(e);
+      }
+
+      /* ---------- Ventana "Gestionar etiquetas" ---------- */
+      function abrirEtiquetas() {
+        pintarEtiquetas();
+        $('nuevaEtq').value = '';
+        $('dlgEtq').showModal();
+      }
+      function usosEtq(nombre) {
+        const n = nombre.toLowerCase();
+        return DATOS.tareas.filter(t => etiquetasDe(t).some(x => x.toLowerCase() === n)).length;
+      }
+      function opcionesColor(sel) {
+        return COLORES_ETQ.map((c, i) => `<option value="${c}" ${i === sel ? 'selected' : ''}>${c[0].toUpperCase() + c.slice(1)}</option>`).join('');
+      }
+      function pintarEtiquetas() {
+        const lista = todasEtiquetas();
+        $('listaEtq').innerHTML = lista.length ? lista.map((e, i) => {
+          const n = usosEtq(e);
+          return `<div class="fila-etq" data-nombre="${esc(e)}">
+            <span class="etq etq-${colorEtq(e)} muestra">${esc(e)}</span>
+            <input class="nombre-etq" value="${esc(e)}" aria-label="Nombre de la etiqueta">
+            <select class="color-etq" aria-label="Color" onchange="this.parentNode.querySelector('.muestra').className='etq etq-'+this.selectedIndex+' muestra'">${opcionesColor(colorEtq(e))}</select>
+            <span class="usos">${n} ${n === 1 ? 'tarea' : 'tareas'}</span>
+            <button type="button" onclick="guardarEtq(this)">Guardar</button>
+            <button type="button" class="btn-peligro" onclick="borrarEtq(this)" title="Eliminar">🗑</button>
+          </div>`;
+        }).join('') : '<p class="ayuda">Aún no hay etiquetas.</p>';
+        $('colorNuevaEtq').innerHTML = opcionesColor(0);
+      }
+      function enviarEtq(datos, mensaje) {
+        $('cargando').style.display = 'grid';
+        api('etiqueta', datos)
+          .then(d => { recibir(d); pintarEtiquetas(); aviso(mensaje); })
+          .catch(fallo);
+      }
+      function guardarEtq(boton) {
+        const fila = boton.closest('.fila-etq');
+        const viejo = fila.dataset.nombre;
+        const nuevo = fila.querySelector('.nombre-etq').value.trim();
+        if (!nuevo) return aviso('El nombre no puede quedar vacío.');
+        const n = usosEtq(viejo);
+        if (nuevo !== viejo && n && !confirm(`Se cambiará «${viejo}» por «${nuevo}» en ${n} ${n === 1 ? 'tarea' : 'tareas'}. ¿Continuar?`))
+          return;
+        enviarEtq({ operacion: 'actualizar', nombre: viejo, nuevo, color: fila.querySelector('.color-etq').value }, 'Etiqueta guardada');
+      }
+      function borrarEtq(boton) {
+        const nombre = boton.closest('.fila-etq').dataset.nombre;
+        const n = usosEtq(nombre);
+        if (!confirm(n
+          ? `¿Eliminar la etiqueta «${nombre}»? Se quitará de ${n} ${n === 1 ? 'tarea' : 'tareas'}.`
+          : `¿Eliminar la etiqueta «${nombre}»?`))
+          return;
+        enviarEtq({ operacion: 'borrar', nombre }, 'Etiqueta eliminada');
+      }
+      function crearEtq() {
+        const nombre = $('nuevaEtq').value.trim();
+        if (!nombre) return aviso('Escribe el nombre de la etiqueta.');
+        enviarEtq({ operacion: 'crear', nombre, color: $('colorNuevaEtq').value }, 'Etiqueta creada');
       }
       function chip(e) {
         return `<span class="etq etq-${colorEtq(e)}">${esc(e)}</span>`;
