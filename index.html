@@ -818,7 +818,142 @@
       }
 
       /* Móvil: cada tarea como tarjeta */
-      @media (max-width: 760px) {
+      /* ---------- Informe impreso (siempre con colores claros) ---------- */
+      #informe {
+        display: none;
+      }
+      @page {
+        size: A4 landscape;
+        margin: 12mm;
+      }
+      @media print {
+        :root,
+        :root[data-tema="oscuro"] {
+          color-scheme: light !important;
+        }
+        html,
+        body {
+          background: #fff !important;
+          margin: 0;
+          padding: 0;
+        }
+        body > *:not(#informe) {
+          display: none !important;
+        }
+        #informe {
+          display: block;
+          color: #1c2430;
+          font-size: 10pt;
+          line-height: 1.35;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+      #informe .inf-cab {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        border-bottom: 3px solid #c6e6d0;
+        padding-bottom: 6px;
+        margin-bottom: 8px;
+      }
+      #informe h1 {
+        font-family: Merriweather, Georgia, serif;
+        color: #1f4e9c;
+        font-size: 17pt;
+        margin: 0;
+      }
+      #informe .inf-meta {
+        font-size: 9pt;
+        color: #5f6670;
+        text-align: right;
+      }
+      #informe .inf-filtros,
+      #informe .inf-totales {
+        font-size: 9.5pt;
+        margin: 4px 0;
+      }
+      #informe .inf-totales b {
+        color: #1f4e9c;
+      }
+      #informe table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+      }
+      #informe thead {
+        display: table-header-group; /* se repite en cada página */
+      }
+      #informe th {
+        text-align: left;
+        font-size: 8.5pt;
+        color: #1f4e9c;
+        border-bottom: 2px solid #1c2430;
+        padding: 5px 6px;
+        white-space: nowrap;
+      }
+      #informe td {
+        padding: 5px 6px;
+        border-bottom: 1px solid #dfe3e8;
+        vertical-align: top;
+        background: #fff;
+        color: #1c2430;
+      }
+      #informe tr {
+        break-inside: avoid;
+      }
+      #informe tbody td:nth-child(n + 3) {
+        white-space: nowrap; /* estado, fechas, %, plazo, coste… en una línea */
+      }
+      #informe tr.inf-principal td {
+        background: #f3f7f4;
+      }
+      #informe tr.inf-hija td.inf-tarea {
+        padding-left: 22px;
+      }
+      #informe .inf-tarea b {
+        color: #1f4e9c;
+      }
+      #informe .inf-sub {
+        font-size: 8.5pt;
+        color: #5f6670;
+      }
+      #informe .inf-rojo {
+        color: #c0392b;
+        font-weight: 600;
+      }
+      #informe .inf-verde {
+        color: #2e7d4f;
+        font-weight: 600;
+      }
+      #informe .inf-pie {
+        margin-top: 10px;
+        font-size: 8.5pt;
+        color: #5f6670;
+      }
+      #informe .ficha {
+        max-width: 190mm;
+      }
+      #informe .ficha td:first-child {
+        width: 34%;
+        color: #1f4e9c;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      #informe .firma {
+        margin-top: 18mm;
+        display: flex;
+        gap: 30mm;
+        font-size: 9pt;
+        color: #5f6670;
+      }
+      #informe .firma div {
+        border-top: 1px solid #5f6670;
+        padding-top: 4px;
+        width: 60mm;
+      }
+
+      @media screen and (max-width: 760px) {
         header {
           padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
         }
@@ -915,6 +1050,7 @@
         </select>
         <button type="button" onclick="abrirEtiquetas()" title="Crear, renombrar, cambiar el color o eliminar etiquetas">🏷 Etiquetas</button>
         <select id="fOrden" class="solo-movil" aria-label="Ordenar por"></select>
+        <button type="button" onclick="imprimirInforme()" title="Imprimir las tareas que se ven ahora (con los filtros y el orden actuales)">🖨 Imprimir</button>
         <button class="btn-prim" onclick="abrir()">+ Nueva tarea</button>
       </div>
 
@@ -1028,6 +1164,7 @@
         <div class="dlg-pie">
           <button type="button" class="btn-peligro" id="btnBorrar" onclick="borrar()">Eliminar</button>
           <span class="ayuda ultimo-envio" id="ultimoEnvio"></span>
+          <button type="button" id="btnImprimirFicha" onclick="imprimirFicha()" title="Imprimir la ficha de esta tarea">🖨 Imprimir</button>
           <button type="button" id="btnCorreo" onclick="enviarCorreo()" title="Enviar los datos de la tarea al creador, responsable y participantes">✉ Enviar por correo</button>
           <button type="button" onclick="cerrar()">Cancelar</button>
           <button type="submit" class="btn-prim">Guardar</button>
@@ -1052,6 +1189,8 @@
         </div>
       </div>
     </dialog>
+
+    <div id="informe" aria-hidden="true"></div>
 
     <div id="cargando">Guardando…</div>
     <div id="aviso"></div>
@@ -1500,11 +1639,13 @@
           .filter(t => !t.padre || !ids.has(String(t.padre)))
           .sort(orden);
         const html = [];
+        VISIBLES = []; // lo que se ve ahora (para el informe impreso)
         for (const t of raices) {
           const hijas = hijasDe(t.id).sort(orden);
           const hijasVis = hijas.filter(cumple);
           if (!cumple(t) && !hijasVis.length) 
             continue;
+          VISIBLES.push({ t, hijas, hijasVis });
           html.push(fila(t, hijas));
           if (!PLEGADAS.has(String(t.id))) 
             hijasVis.forEach(h => html.push(fila(h)));
@@ -1754,6 +1895,125 @@
         pintar();
       });
 
+      /* ---------- Imprimir ---------- */
+      let VISIBLES = [];
+      const URL_APP_PUBLICA = 'https://gomezmon2.github.io/tareas-aespi/';
+
+      function ahora() {
+        return new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      }
+
+      // Texto con los filtros activos, para que el papel diga qué se imprimió
+      function filtrosActivos() {
+        const f = [];
+        const sel = id => $(id).options[$(id).selectedIndex].text;
+        if ($('fBuscar').value.trim()) f.push('Búsqueda: «' + $('fBuscar').value.trim() + '»');
+        if ($('fResp').value) f.push('Responsable: ' + $('fResp').value);
+        if ($('fEstado').value) f.push('Estado: ' + sel('fEstado'));
+        if ($('fEtiqueta').value) f.push('Etiqueta: ' + $('fEtiqueta').value);
+        f.push('Orden: ' + (ORDEN.col ? NOMBRE_COL[ORDEN.col] + (ORDEN.dir === 1 ? ' ▲' : ' ▼') : 'automático'));
+        return f.join(' · ');
+      }
+
+      function lanzarImpresion(html) {
+        $('informe').innerHTML = html;
+        setTimeout(() => window.print(), 50);
+      }
+
+      // Informe de las tareas que se ven ahora en el panel (filtros y orden actuales)
+      function imprimirInforme() {
+        if (!VISIBLES.length) return aviso('No hay tareas que imprimir con los filtros actuales.');
+        const filasT = [];
+        const todas = [];
+        const filaInf = (t, esHija, hijas) => {
+          todas.push(t);
+          const p = plazo(t);
+          const pClase = p === 'Dentro de plazo' ? 'inf-verde' : (p ? 'inf-rojo' : '');
+          const otros = String(t.participantes || '').split(',').map(x => x.trim())
+            .filter(x => x && normalizar(x) !== normalizar(t.responsable));
+          const sub = [etiquetasVisibles(t).join(', '), t.fecha && 'Actividad: ' + fmt(t.fecha), t.localidad, t.notas,
+            t.adjunto && 'Documento: ' + t.adjunto].filter(Boolean).map(esc).join(' · ');
+          const coste = hijas && hijas.length ? costeTotal(t) : t.coste;
+          const cont = hijas && hijas.length ? ` (${hijas.filter(h => h.estado === 'Completado').length}/${hijas.length})` : '';
+          filasT.push(`<tr class="${esHija ? 'inf-hija' : 'inf-principal'}">
+            <td class="inf-tarea">${esHija ? '↳ ' : ''}<b>${esc(t.tarea)}</b>${cont}${sub ? `<div class="inf-sub">${sub}</div>` : ''}</td>
+            <td>${esc(t.responsable || '')}${otros.length ? `<div class="inf-sub">con ${otros.map(esc).join(', ')}</div>` : ''}</td>
+            <td>${esc(t.estado || '')}</td>
+            <td>${fmt(t.inicio)}</td>
+            <td>${fmt(t.fin)}</td>
+            <td>${progreso(t)} %</td>
+            <td>${fmt(t.realizacion)}</td>
+            <td class="${pClase}">${p}</td>
+            <td>${euros(coste)}</td>
+            <td>${t.valoracion ? '★'.repeat(t.valoracion) : ''}</td>
+          </tr>`);
+        };
+        VISIBLES.forEach(v => {
+          filaInf(v.t, false, v.hijas);
+          v.hijasVis.forEach(h => filaInf(h, true)); // las subtareas salen aunque estén plegadas en pantalla
+        });
+        const abiertas = todas.filter(t => !['Completado', 'Cancelada'].includes(t.estado)).length;
+        const hechas = todas.filter(t => t.estado === 'Completado').length;
+        const retr = todas.filter(t => plazo(t) === 'Retrasada').length;
+        const coste = todas.reduce((s, t) => s + (Number(t.coste) || 0), 0);
+        lanzarImpresion(`
+          <div class="inf-cab">
+            <h1>Junta Directiva AESPI · Informe de tareas</h1>
+            <div class="inf-meta">Impreso el ${ahora()}${USUARIO ? '<br>por ' + esc(USUARIO.nombre) : ''}</div>
+          </div>
+          <div class="inf-filtros">${esc(filtrosActivos())}</div>
+          <div class="inf-totales"><b>${todas.length}</b> tareas · <b>${abiertas}</b> abiertas · <b>${hechas}</b> completadas ·
+            <b>${retr}</b> retrasadas · coste <b>${euros(coste) || '0,00 €'}</b></div>
+          <table>
+            <thead><tr><th>Tarea</th><th>Responsable</th><th>Estado</th><th>Inicio</th><th>Fin previsto</th>
+              <th>%</th><th>Realización</th><th>Plazo</th><th>Coste</th><th>Valoración</th></tr></thead>
+            <tbody>${filasT.join('')}</tbody>
+          </table>
+          <div class="inf-pie">Tareas AESPI · ${URL_APP_PUBLICA}</div>`);
+      }
+
+      // Ficha de una tarea (botón del formulario)
+      function imprimirFicha() {
+        const id = frm.elements.namedItem('id').value;
+        const t = DATOS.tareas.find(x => x.id === id);
+        if (!t) return;
+        const principal = t.padre ? DATOS.tareas.find(x => x.id === t.padre) : null;
+        const hijas = hijasDe(t.id);
+        const creador = DATOS.miembros.find(m => String(m.email).toLowerCase() === String(t.creadoPor || '').toLowerCase());
+        const datos = [
+          ['Tarea principal', principal && principal.tarea],
+          ['Creado por', creador ? creador.nombre + ' (' + t.creadoPor + ')' : t.creadoPor],
+          ['Responsable', t.responsable],
+          ['Participantes', t.participantes],
+          ['Estado', t.estado],
+          ['% completado', progreso(t) + ' %'],
+          ['Fecha de inicio', fmt(t.inicio)],
+          ['Fin previsto', fmt(t.fin)],
+          ['Fecha de realización', fmt(t.realizacion)],
+          ['Plazo', plazo(t)],
+          ['Fecha de la actividad', fmt(t.fecha)],
+          ['Localidad', t.localidad],
+          ['Coste', euros(hijas.length ? costeTotal(t) : t.coste)],
+          ['Valoración', t.valoracion ? '★'.repeat(t.valoracion) : ''],
+          ['Etiquetas', etiquetasVisibles(t).join(', ')],
+          ['Notas', t.notas],
+          ['Documento adjunto', t.adjunto],
+          ['Subtareas', hijas.map(x => x.tarea + ' (' + x.estado + ')').join('; ')],
+          ['Último envío por correo', t.correo],
+        ].filter(r => r[1] !== '' && r[1] != null);
+        lanzarImpresion(`
+          <div class="inf-cab">
+            <h1>${esc(t.tarea)}</h1>
+            <div class="inf-meta">Junta Directiva AESPI · Ficha de tarea<br>Impresa el ${ahora()}</div>
+          </div>
+          <table class="ficha"><tbody>${datos.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1]).replace(/\n/g, '<br>')}</td></tr>`).join('')}</tbody></table>
+          <div class="firma"><div>Responsable</div><div>Secretaría</div></div>
+          <div class="inf-pie">Tareas AESPI · ${URL_APP_PUBLICA}</div>`);
+      }
+
+      // Al terminar de imprimir se vacía el informe
+      window.addEventListener('afterprint', () => { $('informe').innerHTML = ''; });
+
       const PLEGADAS = new Set();
       function hijasDe(id) {
         return DATOS
@@ -1916,6 +2176,7 @@
           ? ''
           : 'none';
         $('btnCorreo').style.display = id ? '' : 'none';
+        $('btnImprimirFicha').style.display = id ? '' : 'none';
         $('ultimoEnvio').textContent = id && t.correo ? 'Último envío: ' + t.correo : '';
         FORM_INICIAL = JSON.stringify(Object.fromEntries(new FormData(frm)));
         $('dlg').showModal();
