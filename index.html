@@ -829,6 +829,37 @@
         display: none;
         z-index: 10;
       }
+      #sincro {
+        position: fixed;
+        left: 16px;
+        bottom: 16px;
+        z-index: 9;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        background: var(--blanco);
+        color: var(--azul);
+        border: 1px solid var(--borde);
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 4px 14px var(--sombra);
+      }
+      #sincro::before {
+        content: '';
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 2px solid var(--azul);
+        border-right-color: transparent;
+        animation: girar 0.8s linear infinite;
+      }
+      @keyframes girar {
+        to {
+          transform: rotate(360deg);
+        }
+      }
       #cargando {
         position: fixed;
         inset: 0;
@@ -1243,6 +1274,7 @@
     <div id="informe" aria-hidden="true"></div>
 
     <div id="cargando">Guardando…</div>
+    <div id="sincro" aria-live="polite"></div>
     <div id="aviso"></div>
 
     <script>
@@ -1260,7 +1292,7 @@
           .slice(0, 10);
       }
       function fmt(s) {
-        if (!s) 
+        if (!s)
           return '';
         const [y, m, d] = s.split('-');
         return `${ + d}/${ + m}/${y}`;
@@ -1278,11 +1310,11 @@
       }
 
       function plazo(t) {
-        if (t.realizacion && t.fin) 
+        if (t.realizacion && t.fin)
           return t.realizacion <= t.fin
             ? 'Dentro de plazo'
             : 'Fuera de plazo';
-        if (t.fin && t.fin < hoy() && !['Completado', 'Cancelada'].includes(t.estado)) 
+        if (t.fin && t.fin < hoy() && !['Completado', 'Cancelada'].includes(t.estado))
           return 'Retrasada';
         return '';
       }
@@ -1293,7 +1325,7 @@
           .find(x => x.nombre === nombre);
         const ini = esc(String(nombre || '?').split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase());
         // Si la foto no carga, se ven las iniciales
-        if (m && m.foto) 
+        if (m && m.foto)
           return `<img class="avatar" src="${esc(m.foto)}" alt="${esc(nombre)}" referrerpolicy="no-referrer"
       onerror="this.outerHTML='<span class=&quot;avatar&quot;>${ini}</span>'">`;
         return `<span class="avatar">${ini}</span>`;
@@ -1329,7 +1361,7 @@
 
       // Envía una petición a Apps Script. El tipo text/plain evita la comprobación previa (CORS) del navegador.
       async function api(accion, extra) {
-        if (!/^https:\/\/script\.google\.com\//.test(API_URL)) 
+        if (!/^https:\/\/script\.google\.com\//.test(API_URL))
           throw new Error('Falta poner la URL de Apps Script en index.html (API_URL).');
         let res;
         try {
@@ -1350,6 +1382,7 @@
         if (!res.ok) {
           if (res.sinSesion) {
             guardarSesion('');
+            borrarCopia();
             mostrarAcceso(res.error);
           }
           throw new Error(res.error);
@@ -1361,9 +1394,9 @@
         return api(accion, extra)
           .then(d => {
             recibir(d);
-            if (d.aviso) 
+            if (d.aviso)
               aviso(d.aviso, 7000); // p. ej., no se pudo actualizar el calendario
-            else if (mensaje) 
+            else if (mensaje)
               aviso(mensaje);
             }
           )
@@ -1385,7 +1418,7 @@
       // Pinta el botón "Iniciar sesión con Google". Se llama al cargar la librería de Google y al mostrar el acceso.
       let googleListo = false;
       function iniciarGoogle() {
-        if (!window.google || !google.accounts || GOOGLE_CLIENT_ID.startsWith('PEGAR')) 
+        if (!window.google || !google.accounts || GOOGLE_CLIENT_ID.startsWith('PEGAR'))
           return;
         if (!googleListo) {
           google
@@ -1429,10 +1462,11 @@
       }
 
       function salir() {
-        if (!confirm('¿Cerrar sesión en este dispositivo?')) 
+        if (!confirm('¿Cerrar sesión en este dispositivo?'))
           return;
         api('salir').catch(() => {}); // borra la sesión en el servidor
         guardarSesion('');
+        borrarCopia();
         if (window.google && google.accounts) 
           google
             .accounts
@@ -1458,17 +1492,64 @@
       }
 
       function recargar() {
-        $('cargando').style.display = 'grid';
         cargar();
       }
 
       function cargar() {
-        if (!leerSesion()) 
+        if (!leerSesion())
           return mostrarAcceso();
-        llamar('datos');
+        if (!DATOS.tareas.length) {
+          const copia = leerCopia();
+          if (copia && copia.tareas) recibir(copia, true); // se ve al momento lo de la última vez
+        }
+        sincro('Actualizando…');
+        api('datos')
+          .then(d => { if (!PENDIENTES) recibir(d); sincro(PENDIENTES ? 'Guardando…' : ''); })
+          .catch(e => { sincro(''); fallo(e); });
       }
 
-      function recibir(d) {
+      /* ---------- Rapidez: copia local de los datos y cambios inmediatos ---------- */
+      let PENDIENTES = 0; // operaciones enviadas que aún no han vuelto
+      function sincro(texto) {
+        $('sincro').textContent = texto || '';
+        $('sincro').style.display = texto ? 'flex' : 'none';
+      }
+      function guardarCopia(d) {
+        try {
+          const c = Object.assign({}, d);
+          delete c.aviso;
+          delete c.sesion;
+          localStorage.setItem('aespi_datos', JSON.stringify(c));
+        } catch (e) {}
+      }
+      function leerCopia() {
+        try { return JSON.parse(localStorage.getItem('aespi_datos') || 'null'); } catch (e) { return null; }
+      }
+      function borrarCopia() {
+        try { localStorage.removeItem('aespi_datos'); } catch (e) {}
+      }
+
+      // Envía una operación sin bloquear la pantalla; al volver, se muestran los datos reales del servidor
+      function enviarEnSegundoPlano(accion, extra, mensaje) {
+        PENDIENTES++;
+        sincro('Guardando…');
+        return api(accion, extra)
+          .then(d => {
+            PENDIENTES--;
+            if (!PENDIENTES) { recibir(d); sincro(''); }
+            if (d.aviso) aviso(d.aviso, 7000);
+            else if (mensaje) aviso(mensaje);
+          })
+          .catch(e => {
+            PENDIENTES--;
+            sincro('');
+            fallo(e);
+            cargar(); // se vuelve a mostrar lo que hay realmente guardado
+          });
+      }
+
+      function recibir(d, desdeCopia) {
+        if (!desdeCopia) guardarCopia(d);
         DATOS = d;
         if (d.usuario) {
           USUARIO = d.usuario;
@@ -1504,7 +1585,7 @@
       // Etiquetas que se muestran: las propias o, si una subtarea no tiene, las de su tarea principal
       function etiquetasVisibles(t) {
         const propias = etiquetasDe(t);
-        if (propias.length || !t.padre) 
+        if (propias.length || !t.padre)
           return propias;
         return etiquetasDe(DATOS.tareas.find(x => x.id === t.padre) || {});
       }
@@ -1658,11 +1739,11 @@
           kpi('coste', euros(coste) || '0 €', 'Coste total');
 
         const cumple = t => {
-          if (r && t.responsable !== r) 
+          if (r && t.responsable !== r)
             return false;
-          if (e === 'abiertas' && ['Completado', 'Cancelada'].includes(t.estado)) 
+          if (e === 'abiertas' && ['Completado', 'Cancelada'].includes(t.estado))
             return false;
-          if (e === 'retrasadas' && plazo(t) !== 'Retrasada') 
+          if (e === 'retrasadas' && plazo(t) !== 'Retrasada')
             return false;
           if (e === 'coste' && !(Number(t.coste) > 0))
             return false;
@@ -1671,7 +1752,7 @@
           const ft = $('fTipo').value;
           if (ft && (esEvento(t) ? 'Evento' : 'Tarea') !== ft)
             return false;
-          if (fe && !etiquetasVisibles(t).some(x => x.toLowerCase() === fe)) 
+          if (fe && !etiquetasVisibles(t).some(x => x.toLowerCase() === fe))
             return false;
           if (q && ![
             t.tarea,
@@ -1680,7 +1761,7 @@
             t.notas,
             t.responsable,
             etiquetasVisibles(t).join(' ')
-          ].join(' ').toLowerCase().includes(q)) 
+          ].join(' ').toLowerCase().includes(q))
             return false;
           return true;
         };
@@ -1696,14 +1777,14 @@
         for (const t of raices) {
           const hijas = hijasDe(t.id).sort(orden);
           const hijasVis = hijas.filter(cumple);
-          if (!cumple(t) && !hijasVis.length) 
+          if (!cumple(t) && !hijasVis.length)
             continue;
           VISIBLES.push({ t, hijas, hijasVis });
           html.push(fila(t, hijas));
-          if (!PLEGADAS.has(String(t.id))) 
+          if (!PLEGADAS.has(String(t.id)))
             hijasVis.forEach(h => html.push(fila(h)));
           }
-        
+
         $('filas').innerHTML = html.length
           ? html.join('')
           : `<tr><td colspan="10" class="vacio">${ts.length
@@ -1722,7 +1803,7 @@
         const hijas = t.id
           ? hijasDe(t.id)
           : [];
-        if (!hijas.length) 
+        if (!hijas.length)
           return PROGRESO_POR_ESTADO[estado ?? t.estado] || 0;
         const validas = hijas.filter(h => h.estado !== 'Cancelada');
         return validas.length
@@ -1769,7 +1850,7 @@
       function ordenAuto(a, b) {
         const ca = ['Completado', 'Cancelada'].includes(a.estado),
           cb = ['Completado', 'Cancelada'].includes(b.estado);
-        if (ca !== cb) 
+        if (ca !== cb)
           return ca
             ? 1
             : -1;
@@ -1778,7 +1859,7 @@
 
       function costeTotal(t) {
         const hijas = hijasDe(t.id);
-        if (!hijas.length) 
+        if (!hijas.length)
           return t.coste;
         return (Number(t.coste) || 0) + hijas.reduce((s, h) => s + (Number(h.coste) || 0), 0);
       }
@@ -1810,13 +1891,13 @@
       }
 
       function comparar(a, b) {
-        if (!ORDEN.col) 
+        if (!ORDEN.col)
           return ordenAuto(a, b);
         const va = valorOrden(a, ORDEN.col),
           vb = valorOrden(b, ORDEN.col);
         const vaVacio = va === '',
           vbVacio = vb === '';
-        if (vaVacio || vbVacio) 
+        if (vaVacio || vbVacio)
           return vaVacio && vbVacio
             ? ordenAuto(a, b)
             : (
@@ -1833,17 +1914,17 @@
       }
 
       function ordenarPor(col) {
-        if (ORDEN.col !== col) 
+        if (ORDEN.col !== col)
           ORDEN = {
             col,
             dir: 1
           };
-        else if (ORDEN.dir === 1) 
+        else if (ORDEN.dir === 1)
           ORDEN = {
             col,
             dir: -1
           };
-        else 
+        else
           ORDEN = {
             col: '',
             dir: 1
@@ -2168,6 +2249,8 @@
       }
 
       function abrir(id, padre) {
+        if (id && String(id).startsWith('nueva-'))
+          return aviso('Un momento: la tarea se está guardando.');
         const t = id
           ? DATOS
             .tareas
@@ -2179,7 +2262,7 @@
             padre: padre || ''
           };
         // Una subtarea nueva toma por defecto las etiquetas de su tarea principal
-        if (!id && padre) 
+        if (!id && padre)
           t.etiquetas = (DATOS.tareas.find(x => x.id === padre) || {}).etiquetas || '';
         const tieneHijas = id && hijasDe(id).length > 0;
 
@@ -2201,7 +2284,7 @@
           .miembros
           .filter(m => m.email);
         let opciones = conCorreo.map(m => `<option value="${esc(m.email.toLowerCase())}">${esc(m.nombre)} — ${esc(m.email)}</option>`);
-        if (id && t.creadoPor && !conCorreo.some(m => m.email.toLowerCase() === String(t.creadoPor).toLowerCase())) 
+        if (id && t.creadoPor && !conCorreo.some(m => m.email.toLowerCase() === String(t.creadoPor).toLowerCase()))
           opciones.push(`<option value="${esc(t.creadoPor)}">${esc(t.creadoPor)}</option>`); // ya no está en Miembros
         const fijado = !id || !!t.creadoPor;
         $('selCreador').innerHTML = `<option value="">— (no consta)</option>` + opciones.join('');
@@ -2213,8 +2296,8 @@
             : 'Esta tarea no tiene creador: puedes indicarlo ahora (después no se podrá cambiar).';
 
         frm.reset();
-        for (const el of frm.elements) 
-          if (el.name) 
+        for (const el of frm.elements)
+          if (el.name)
             el.value = t[el.name] ?? '';
       // La casilla y el tipo no se rellenan con el bucle anterior
         frm.invitar.value = 'Sí';
@@ -2345,7 +2428,7 @@
       }
 
       function cambioEstado() {
-        if (frm.estado.value === 'Completado' && !frm.realizacion.value) 
+        if (frm.estado.value === 'Completado' && !frm.realizacion.value)
           frm.realizacion.value = hoy();
         mostrarProgreso();
       }
@@ -2353,13 +2436,22 @@
       function guardar(ev) {
         ev.preventDefault();
         const t = Object.fromEntries(new FormData(frm));
-        if ($('selPadre').disabled) 
+        if ($('selPadre').disabled)
           t.padre = ''; // un select desactivado no se envía
         cerrar();
-        $('cargando').style.display = 'grid';
-        llamar('guardar', {
-          tarea: t
-        }, 'Tarea guardada');
+        // Se aplica ya en pantalla (los datos definitivos llegan del servidor en unos segundos)
+        const local = Object.assign({}, t, {
+          valoracion: t.valoracion ? Number(t.valoracion) : '',
+          coste: t.coste === '' ? '' : Number(t.coste),
+        });
+        const actual = DATOS.tareas.find(x => x.id === t.id);
+        if (actual) Object.assign(actual, local);
+        else DATOS.tareas.push(Object.assign(local, {
+          id: 'nueva-' + Date.now(),
+          creadoPor: USUARIO ? USUARIO.email : '',
+        }));
+        pintar();
+        enviarEnSegundoPlano('guardar', { tarea: t }, 'Tarea guardada');
       }
 
       function borrar() {
@@ -2371,19 +2463,22 @@
         const msg = n
           ? `¿Eliminar esta tarea y sus ${n} subtarea(s)? No se puede deshacer.`
           : '¿Eliminar esta tarea? No se puede deshacer.';
-        if (!confirm(msg)) 
+        if (!confirm(msg))
           return;
         cerrar();
-        $('cargando').style.display = 'grid';
-        llamar('eliminar', {
+        DATOS.tareas = DATOS.tareas.filter(x => x.id !== id && x.padre !== id);
+        pintar();
+        enviarEnSegundoPlano('eliminar', {
           id
         }, 'Tarea eliminada');
       }['fBuscar', 'fResp', 'fEstado', 'fTipo', 'fEtiqueta'].forEach(id => $(id).addEventListener('input', pintar));
+      // Al abrir la app se muestran solo las tareas abiertas (pendientes y en curso)
+      $('fEstado').value = 'abiertas';
       cargar();
 
       // Al volver a la app después de un rato, se actualizan los datos
       document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && leerSesion()) 
+        if (!document.hidden && leerSesion())
           cargar();
         }
       );
@@ -2436,7 +2531,7 @@
       aplicarTema();
 
       // Necesario para que la app se pueda instalar
-      if ('serviceWorker' in navigator) 
+      if ('serviceWorker' in navigator)
         navigator
           .serviceWorker
           .register('sw.js')
