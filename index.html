@@ -56,6 +56,7 @@
         --fila-principal: #f7faf8;
         --texto-hija: #34507f;
         --estrella: #e0a800;
+        --franja-evento: #e0a800; /* franja de color de los eventos en el panel */
         --boton-cab: rgba(255, 255, 255, 0.6);
         --velo: rgba(255, 255, 255, 0.6);
         --sombra: rgba(0, 0, 0, 0.25);
@@ -103,6 +104,7 @@
         --fila-principal: #1d242e;
         --texto-hija: #b5c9ea;
         --estrella: #f2c335;
+        --franja-evento: #f2c335;
         --boton-cab: rgba(255, 255, 255, 0.1);
         --velo: rgba(0, 0, 0, 0.5);
         --sombra: rgba(0, 0, 0, 0.6);
@@ -385,6 +387,23 @@
       .ultimo-envio {
         align-self: center;
       }
+      .solo-evento[hidden] {
+        display: none;
+      }
+      .casilla {
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .casilla input {
+        width: auto !important;
+        margin: 0;
+      }
+      .marca-evento {
+        margin-right: 4px;
+      }
       .adjunto {
         margin-left: 6px;
         text-decoration: none;
@@ -536,6 +555,10 @@
       }
       tr.principal {
         background: var(--fila-principal);
+      }
+      /* Eventos: franja de color a la izquierda de la fila */
+      tr.es-evento td:first-child {
+        box-shadow: inset 5px 0 0 var(--franja-evento);
       }
       tr.hija td.t-nombre {
         padding-left: 42px;
@@ -905,6 +928,9 @@
       #informe tbody td:nth-child(n + 3) {
         white-space: nowrap; /* estado, fechas, %, plazo, coste… en una línea */
       }
+      #informe tr.inf-evento td:first-child {
+        box-shadow: inset 4px 0 0 #e0a800;
+      }
       #informe tr.inf-principal td {
         background: #f3f7f4;
       }
@@ -1045,6 +1071,11 @@
           <option value="retrasadas">Retrasadas</option>
           <option value="coste">Con coste</option>
         </select>
+        <select id="fTipo" aria-label="Tipo">
+          <option value="">Tareas y eventos</option>
+          <option value="Tarea">Solo tareas</option>
+          <option value="Evento">📅 Solo eventos</option>
+        </select>
         <select id="fEtiqueta">
           <option value="">Todas las etiquetas</option>
         </select>
@@ -1094,6 +1125,14 @@
           <span class="ayuda" id="ayudaCreador"></span>
         </div>
         <div class="campo c4">
+          <label>Tipo</label>
+          <select name="tipo" id="selTipo" onchange="cambioTipo()">
+            <option value="Tarea">Tarea</option>
+            <option value="Evento">📅 Evento (reunión, asamblea, charla…)</option>
+          </select>
+          <span class="ayuda" id="ayudaTipo"></span>
+        </div>
+        <div class="campo c4">
           <label>Tarea principal</label>
           <select name="padre" id="selPadre" onchange="cambioPadre()"></select>
           <span class="ayuda" id="ayudaPadre"></span></div>
@@ -1130,7 +1169,18 @@
 
         <div class="seccion">Detalles de la actividad</div>
         <div class="campo c1">
-          <label>Fecha</label><input type="date" name="fecha"></div>
+          <label id="lblFecha">Fecha</label><input type="date" name="fecha" id="inFecha"></div>
+        <div class="campo c1 solo-evento">
+          <label>Hora de inicio</label><input type="time" name="horaIni"></div>
+        <div class="campo c1 solo-evento">
+          <label>Hora de fin</label><input type="time" name="horaFin"></div>
+        <div class="campo c1 solo-evento">
+          <label>Lugar</label><input name="lugar" placeholder="Sala, dirección…"></div>
+        <div class="campo c4 solo-evento">
+          <label class="casilla"><input type="checkbox" name="invitar" value="Sí">
+            Invitar por Google Calendar al creador, al responsable y a los participantes</label>
+          <span class="ayuda">Recibirán la invitación en su correo y podrán confirmar si asisten.</span>
+        </div>
         <div class="campo c1">
           <label>Localidad</label><input name="localidad"></div>
         <div class="campo c1">
@@ -1618,6 +1668,9 @@
             return false;
           if (e && !['abiertas', 'retrasadas', 'coste'].includes(e) && t.estado !== e)
             return false;
+          const ft = $('fTipo').value;
+          if (ft && (esEvento(t) ? 'Evento' : 'Tarea') !== ft)
+            return false;
           if (fe && !etiquetasVisibles(t).some(x => x.toLowerCase() === fe)) 
             return false;
           if (q && ![
@@ -1910,6 +1963,7 @@
         if ($('fBuscar').value.trim()) f.push('Búsqueda: «' + $('fBuscar').value.trim() + '»');
         if ($('fResp').value) f.push('Responsable: ' + $('fResp').value);
         if ($('fEstado').value) f.push('Estado: ' + sel('fEstado'));
+        if ($('fTipo').value) f.push('Tipo: ' + sel('fTipo').replace('📅 ', ''));
         if ($('fEtiqueta').value) f.push('Etiqueta: ' + $('fEtiqueta').value);
         f.push('Orden: ' + (ORDEN.col ? NOMBRE_COL[ORDEN.col] + (ORDEN.dir === 1 ? ' ▲' : ' ▼') : 'automático'));
         return f.join(' · ');
@@ -1931,11 +1985,12 @@
           const pClase = p === 'Dentro de plazo' ? 'inf-verde' : (p ? 'inf-rojo' : '');
           const otros = String(t.participantes || '').split(',').map(x => x.trim())
             .filter(x => x && normalizar(x) !== normalizar(t.responsable));
-          const sub = [etiquetasVisibles(t).join(', '), t.fecha && 'Actividad: ' + fmt(t.fecha), t.localidad, t.notas,
+          const sub = [etiquetasVisibles(t).join(', '), t.fecha && (esEvento(t) ? 'Evento: ' : 'Actividad: ') + fmt(t.fecha) + (esEvento(t) && t.horaIni ? ' ' + horario(t) : ''),
+            esEvento(t) && t.lugar, t.localidad, t.notas,
             t.adjunto && 'Documento: ' + t.adjunto].filter(Boolean).map(esc).join(' · ');
           const coste = hijas && hijas.length ? costeTotal(t) : t.coste;
           const cont = hijas && hijas.length ? ` (${hijas.filter(h => h.estado === 'Completado').length}/${hijas.length})` : '';
-          filasT.push(`<tr class="${esHija ? 'inf-hija' : 'inf-principal'}">
+          filasT.push(`<tr class="${esHija ? 'inf-hija' : 'inf-principal'}${esEvento(t) ? ' inf-evento' : ''}">
             <td class="inf-tarea">${esHija ? '↳ ' : ''}<b>${esc(t.tarea)}</b>${cont}${sub ? `<div class="inf-sub">${sub}</div>` : ''}</td>
             <td>${esc(t.responsable || '')}${otros.length ? `<div class="inf-sub">con ${otros.map(esc).join(', ')}</div>` : ''}</td>
             <td>${esc(t.estado || '')}</td>
@@ -1991,7 +2046,11 @@
           ['Fin previsto', fmt(t.fin)],
           ['Fecha de realización', fmt(t.realizacion)],
           ['Plazo', plazo(t)],
-          ['Fecha de la actividad', fmt(t.fecha)],
+          ['Tipo', esEvento(t) ? 'Evento' : ''],
+          [esEvento(t) ? 'Fecha del evento' : 'Fecha de la actividad', fmt(t.fecha)],
+          ['Hora', esEvento(t) ? horario(t) : ''],
+          ['Lugar', esEvento(t) ? t.lugar : ''],
+          ['Invitaciones por Calendar', esEvento(t) && t.invitar === 'Sí' ? 'Sí' : ''],
           ['Localidad', t.localidad],
           ['Coste', euros(hijas.length ? costeTotal(t) : t.coste)],
           ['Valoración', t.valoracion ? '★'.repeat(t.valoracion) : ''],
@@ -2037,7 +2096,8 @@
           ? (Number(t.coste) || 0) + hijas.reduce((s, h) => s + (Number(h.coste) || 0), 0)
           : t.coste;
         const sub = [
-          t.fecha && fmt(t.fecha),
+          t.fecha && (esEvento(t) ? '📅 ' : '') + fmt(t.fecha) + (esEvento(t) && t.horaIni ? ' ' + horario(t) : ''),
+          esEvento(t) ? t.lugar : '',
           t.localidad,
           t.notas
         ]
@@ -2062,7 +2122,7 @@
           : '');
         let nombre;
         if (esHija) {
-          nombre = esc(t.tarea) + etqs;
+          nombre = (esEvento(t) ? '<span class="marca-evento" title="Evento">📅</span>' : '') + esc(t.tarea) + etqs;
         } else {
           const hechas = tieneHijas
             ? hijas
@@ -2075,7 +2135,7 @@
             : 'oculto'}" onclick="plegar(event,'${id}')" title="Mostrar/ocultar subtareas">${PLEGADAS.has(String(t.id))
               ? '▸'
               : '▾'}</button>
-        <div>${esc(t.tarea)}${tieneHijas
+        <div>${esEvento(t) ? '<span class="marca-evento" title="Evento">📅</span>' : ''}${esc(t.tarea)}${tieneHijas
                 ? `<span class="contador">${hechas}/${hijas.length}</span>`
                 : ''}${etqs}
           ${sub
@@ -2085,7 +2145,7 @@
         }
         return `<tr class="${esHija
           ? 'hija'
-          : 'principal'}" onclick="abrir('${id}')">
+          : 'principal'}${esEvento(t) ? ' es-evento' : ''}" onclick="abrir('${id}')">
       <td class="t-nombre">${nombre}${esHija && sub
             ? `<div class="t-sub">${sub}</div>`
             : ''}</td>
@@ -2156,6 +2216,11 @@
         for (const el of frm.elements) 
           if (el.name) 
             el.value = t[el.name] ?? '';
+      // La casilla y el tipo no se rellenan con el bucle anterior
+        frm.invitar.value = 'Sí';
+        frm.invitar.checked = t.invitar === 'Sí';
+        frm.tipo.value = t.tipo === 'Evento' ? 'Evento' : 'Tarea';
+        cambioTipo();
       $('selCreador').value = id
           ? String(t.creadoPor || '').toLowerCase()
           : (
@@ -2244,6 +2309,21 @@
           .catch(fallo);
       }
 
+      // Muestra u oculta los campos propios de un evento
+      function cambioTipo() {
+        const ev = frm.tipo.value === 'Evento';
+        document.querySelectorAll('.solo-evento').forEach(x => x.hidden = !ev);
+        $('lblFecha').textContent = ev ? 'Fecha del evento *' : 'Fecha';
+        $('inFecha').required = ev;
+        $('ayudaTipo').textContent = ev
+          ? 'La cita del calendario se pondrá en la fecha y hora del evento, con su nombre, en vez de «Fin previsto».'
+          : '';
+      }
+      const esEvento = t => t.tipo === 'Evento';
+      function horario(t) {
+        return t.horaIni ? t.horaIni + (t.horaFin ? '–' + t.horaFin : '') : '';
+      }
+
       let ABIERTA = null; // tarea abierta en el formulario
       function mostrarProgreso() {
         const conHijas = ABIERTA && ABIERTA.id && hijasDe(ABIERTA.id).length;
@@ -2298,7 +2378,7 @@
         llamar('eliminar', {
           id
         }, 'Tarea eliminada');
-      }['fBuscar', 'fResp', 'fEstado', 'fEtiqueta'].forEach(id => $(id).addEventListener('input', pintar));
+      }['fBuscar', 'fResp', 'fEstado', 'fTipo', 'fEtiqueta'].forEach(id => $(id).addEventListener('input', pintar));
       cargar();
 
       // Al volver a la app después de un rato, se actualizan los datos
