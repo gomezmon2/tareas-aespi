@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Tareas AESPI</title>
-    <meta name="description" content="Seguidor de tareas de la Junta Directiva AESPI">
+    <meta name="description" content="Seguidor de actividades de la Junta Directiva AESPI">
     <meta name="theme-color" content="#1f4e9c">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/png" href="icons/favicon.png">
@@ -1063,7 +1063,7 @@
   </head>
   <body>
     <header>
-      <h1>Junta Directiva AESPI <span>| Seguidor de tareas</span></h1>
+      <h1>Junta Directiva AESPI <span>| Seguidor de actividades</span></h1>
       <div class="acciones-cab">
         <span class="usuario-cab" id="usuarioCab"></span>
         <a class="boton-cab" href="manual.pdf" target="_blank" rel="noopener" title="Abrir el manual de usuario (PDF)">? <span class="txt">Manual</span></a>
@@ -1103,7 +1103,7 @@
           <option value="coste">Con coste</option>
         </select>
         <select id="fTipo" aria-label="Tipo">
-          <option value="">Tareas y eventos</option>
+          <option value="">Todas las actividades</option>
           <option value="Tarea">Solo tareas</option>
           <option value="Evento">📅 Solo eventos</option>
         </select>
@@ -1113,7 +1113,7 @@
         <button type="button" onclick="abrirEtiquetas()" title="Crear, renombrar, cambiar el color o eliminar etiquetas">🏷 Etiquetas</button>
         <select id="fOrden" class="solo-movil" aria-label="Ordenar por"></select>
         <button type="button" onclick="imprimirInforme()" title="Imprimir las tareas que se ven ahora (con los filtros y el orden actuales)">🖨 Imprimir</button>
-        <button class="btn-prim" onclick="abrir()">+ Nueva tarea</button>
+        <button class="btn-prim" onclick="abrir()">+ Nueva actividad</button>
       </div>
 
       <div class="tabla-wrap">
@@ -1143,7 +1143,7 @@
 
     <dialog id="dlg">
       <div class="dlg-cab">
-        <h2 id="dlgTitulo">Nueva tarea</h2>
+        <h2 id="dlgTitulo">Nueva actividad</h2>
         <button type="button" onclick="cerrar()" aria-label="Cerrar">×</button>
       </div>
       <form id="frm" onsubmit="guardar(event)">
@@ -1732,7 +1732,7 @@
              aria-pressed="${e === filtro}" title="${filtro ? 'Mostrar solo: ' + texto.toLowerCase() : 'Mostrar todas'}">
              <b>${valor}</b><small>${texto}</small></button>`;
         $('resumen').innerHTML =
-          kpi('', ts.length, 'Tareas') +
+          kpi('', ts.length, 'Actividades') +
           kpi('abiertas', abiertas.length, 'Abiertas') +
           kpi('Completado', ts.filter(t => t.estado === 'Completado').length, 'Completadas') +
           kpi('retrasadas', retr.length, 'Retrasadas', retr.length ? 'alerta' : '') +
@@ -1788,8 +1788,8 @@
         $('filas').innerHTML = html.length
           ? html.join('')
           : `<tr><td colspan="10" class="vacio">${ts.length
-            ? 'Ninguna tarea coincide con los filtros.'
-            : 'Aún no hay tareas. Pulsa «+ Nueva tarea».'}</td></tr>`;
+            ? 'Ninguna actividad coincide con los filtros.'
+            : 'Aún no hay actividades. Pulsa «+ Nueva actividad».'}</td></tr>`;
       }
 
       // % de avance automático: por estado, o media de las subtareas (sin contar las canceladas)
@@ -2094,11 +2094,11 @@
         const coste = todas.reduce((s, t) => s + (Number(t.coste) || 0), 0);
         lanzarImpresion(`
           <div class="inf-cab">
-            <h1>Junta Directiva AESPI · Informe de tareas</h1>
+            <h1>Junta Directiva AESPI · Informe de actividades</h1>
             <div class="inf-meta">Impreso el ${ahora()}${USUARIO ? '<br>por ' + esc(USUARIO.nombre) : ''}</div>
           </div>
           <div class="inf-filtros">${esc(filtrosActivos())}</div>
-          <div class="inf-totales"><b>${todas.length}</b> tareas · <b>${abiertas}</b> abiertas · <b>${hechas}</b> completadas ·
+          <div class="inf-totales"><b>${todas.length}</b> actividades · <b>${abiertas}</b> abiertas · <b>${hechas}</b> completadas ·
             <b>${retr}</b> retrasadas · coste <b>${euros(coste) || '0,00 €'}</b></div>
           <table>
             <thead><tr><th>Tarea</th><th>Responsable</th><th>Estado</th><th>Inicio</th><th>Fin previsto</th>
@@ -2315,11 +2315,11 @@
         pintarSugerencias();
         pintarAbrirAdjunto();
         $('dlgTitulo').textContent = id
-          ? 'Editar tarea'
+          ? (t.tipo === 'Evento' ? 'Editar evento' : 'Editar tarea')
           : (
             padre
             ? 'Nueva subtarea'
-            : 'Nueva tarea');
+            : 'Nueva actividad');
         $('btnBorrar').style.display = id
           ? ''
           : 'none';

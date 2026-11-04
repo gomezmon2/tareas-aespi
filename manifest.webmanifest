@@ -1,7 +1,7 @@
 {
   "name": "Tareas Junta Directiva AESPI",
   "short_name": "Tareas AESPI",
-  "description": "Seguidor de tareas de la Junta Directiva AESPI",
+  "description": "Seguidor de actividades de la Junta Directiva AESPI",
   "lang": "es",
   "start_url": "./",
   "scope": "./",
