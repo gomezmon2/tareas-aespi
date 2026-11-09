@@ -57,6 +57,12 @@
         --texto-hija: #34507f;
         --estrella: #e0a800;
         --franja-evento: #e0a800; /* franja de color de los eventos en el panel */
+        --plazos-color: #1f4e9c;
+        --plazos-borde: #cfdcf2;
+        --plazos-fondo: #f2f6fd;
+        --evento-color: #c99700;
+        --evento-borde: #f1dd9c;
+        --evento-fondo: #fffaea;
         --boton-cab: rgba(255, 255, 255, 0.6);
         --velo: rgba(255, 255, 255, 0.6);
         --sombra: rgba(0, 0, 0, 0.25);
@@ -105,6 +111,12 @@
         --texto-hija: #b5c9ea;
         --estrella: #f2c335;
         --franja-evento: #f2c335;
+        --plazos-color: #8fb4f0;
+        --plazos-borde: #2c3f60;
+        --plazos-fondo: #172131;
+        --evento-color: #f2c335;
+        --evento-borde: #5a4a1a;
+        --evento-fondo: #262113;
         --boton-cab: rgba(255, 255, 255, 0.1);
         --velo: rgba(0, 0, 0, 0.5);
         --sombra: rgba(0, 0, 0, 0.6);
@@ -782,6 +794,40 @@
         min-height: 70px;
         resize: vertical;
       }
+      /* Bloques del formulario: plazos (azul) y detalles del evento/actividad (amarillo) */
+      .grupo {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px 14px;
+        padding: 10px 14px 14px;
+        border: 1px solid var(--grupo-borde);
+        border-left: 5px solid var(--grupo-color);
+        border-radius: 10px;
+        background: var(--grupo-fondo);
+      }
+      .grupo-plazos {
+        --grupo-color: var(--plazos-color);
+        --grupo-borde: var(--plazos-borde);
+        --grupo-fondo: var(--plazos-fondo);
+      }
+      .grupo-evento {
+        --grupo-color: var(--evento-color);
+        --grupo-borde: var(--evento-borde);
+        --grupo-fondo: var(--evento-fondo);
+      }
+      .grupo-titulo {
+        grid-column: 1 / -1;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--grupo-color);
+        filter: brightness(0.85);
+      }
+      :root[data-tema="oscuro"] .grupo-titulo {
+        filter: none;
+      }
       .seccion {
         grid-column: 1 / -1;
         font-size: 12px;
@@ -1048,7 +1094,8 @@
           display: inline-block;
           width: auto;
         }
-        form {
+        form,
+        .grupo {
           grid-template-columns: 1fr 1fr;
         }
         .campo,
@@ -1185,6 +1232,8 @@
             <option>Cancelada</option>
           </select>
         </div>
+        <div class="grupo grupo-plazos">
+          <div class="grupo-titulo">⏱ Plazos</div>
         <div class="campo c1">
           <label>Fecha de inicio</label><input type="date" name="inicio"></div>
         <div class="campo c1">
@@ -1197,8 +1246,10 @@
             <output id="outProgreso">0%</output>
             <span class="ayuda" id="ayudaProgreso"></span></div>
         </div>
+        </div>
 
-        <div class="seccion">Detalles de la actividad</div>
+        <div class="grupo grupo-evento">
+          <div class="grupo-titulo" id="tituloDetalles">📋 Detalles de la actividad</div>
         <div class="campo c1">
           <label id="lblFecha">Fecha</label><input type="date" name="fecha" id="inFecha"></div>
         <div class="campo c1 solo-evento">
@@ -1226,6 +1277,7 @@
             <option value="4">★★★★ 4</option>
             <option value="5">★★★★★ 5</option>
           </select>
+        </div>
         </div>
         <div class="campo c4">
           <label>Participantes</label><input name="participantes" placeholder="Nombres separados por comas"></div>
@@ -1467,7 +1519,7 @@
         api('salir').catch(() => {}); // borra la sesión en el servidor
         guardarSesion('');
         borrarCopia();
-        if (window.google && google.accounts) 
+        if (window.google && google.accounts)
           google
             .accounts
             .id
@@ -2397,6 +2449,7 @@
         const ev = frm.tipo.value === 'Evento';
         document.querySelectorAll('.solo-evento').forEach(x => x.hidden = !ev);
         $('lblFecha').textContent = ev ? 'Fecha del evento *' : 'Fecha';
+        $('tituloDetalles').textContent = ev ? '📅 Detalles del evento' : '📋 Detalles de la actividad';
         $('inFecha').required = ev;
         $('ayudaTipo').textContent = ev
           ? 'La cita del calendario se pondrá en la fecha y hora del evento, con su nombre, en vez de «Fin previsto».'
